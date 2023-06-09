@@ -26,7 +26,7 @@ public class CommonHandler {
 
     @ExceptionHandler({ValidationException.class, MethodArgumentNotValidException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionResponse handleValidation(RuntimeException e) {
+    public ExceptionResponse handleValidation(Exception e) {
         return new ExceptionResponse(e.getMessage());
     }
 
