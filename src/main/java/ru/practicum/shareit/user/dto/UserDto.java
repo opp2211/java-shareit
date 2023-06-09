@@ -14,6 +14,6 @@ public class UserDto {
     @Email(message = "Invalid email",
             regexp = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@" +
                     "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$")
-    @NullableNotBlank
+    @NullableNotBlank(message = "Email cannot be blank")
     private String email;
 }
