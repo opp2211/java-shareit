@@ -10,7 +10,7 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 
 @Entity
-@Table(name="items")
+@Table(name = "items")
 @Data
 @Builder
 @AllArgsConstructor
