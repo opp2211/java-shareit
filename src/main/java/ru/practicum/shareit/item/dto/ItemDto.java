@@ -5,6 +5,8 @@ import lombok.Data;
 import ru.practicum.shareit.booking.dto.BookingNearest;
 import ru.practicum.shareit.user.validator.NullableNotBlank;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 public class ItemDto {
@@ -18,4 +20,5 @@ public class ItemDto {
     private BookingNearest lastBooking;
 
     private BookingNearest nextBooking;
+    private List<CommentDto> comments;
 }

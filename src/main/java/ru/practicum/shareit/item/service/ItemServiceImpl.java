@@ -3,18 +3,24 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingNearest;
-import ru.practicum.shareit.booking.storage.BookingRepo;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,7 +30,8 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final BookingRepo bookingRepo;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public ItemDto addNew(ItemDto itemDto, Long userId) {
@@ -44,7 +51,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
-        return ItemMapper.toItemDto(itemRepository.save(item), null, null);
+        return ItemMapper.toItemDto(itemRepository.save(item), null, null, Collections.EMPTY_LIST);
     }
 
     @Override
@@ -66,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             item.setAvailable(itemDto.getAvailable());
         }
-        return ItemMapper.toItemDto(itemRepository.save(item), null, null);
+        return ItemMapper.toItemDto(itemRepository.save(item), null, null, Collections.EMPTY_LIST);
     }
 
     @Override
@@ -76,18 +83,24 @@ public class ItemServiceImpl implements ItemService {
         BookingNearest lastBooking = null;
         BookingNearest nextBooking = null;
         if (Objects.equals(item.getOwner().getId(), userId)) {
-            lastBooking = bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(itemId, LocalDateTime.now());
-            nextBooking = bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(itemId, LocalDateTime.now());
+            lastBooking = bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
+                    itemId, BookingStatus.APPROVED, LocalDateTime.now());
+            nextBooking = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                    itemId, BookingStatus.APPROVED, LocalDateTime.now());
         }
-        return ItemMapper.toItemDto(item, lastBooking, nextBooking);
+        List<Comment> comments = commentRepository.findAllByItemId(itemId);
+        return ItemMapper.toItemDto(item, lastBooking, nextBooking, comments);
     }
 
     @Override
     public List<ItemDto> getAllOwnerItems(Long userId) {
         return itemRepository.findAllByOwnerId(userId).stream()
                 .map(item -> ItemMapper.toItemDto(item,
-                        bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(item.getId(), LocalDateTime.now()),
-                        bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(item.getId(), LocalDateTime.now())))
+                        bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
+                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
+                        bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
+                        commentRepository.findAllByItemId(item.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -98,8 +111,24 @@ public class ItemServiceImpl implements ItemService {
         }
         return itemRepository.searchAvailByText(text).stream()
                 .map(item -> ItemMapper.toItemDto(item,
-                        bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(item.getId(), LocalDateTime.now()),
-                        bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(item.getId(), LocalDateTime.now())))
+                        bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
+                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
+                        bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
+                        commentRepository.findAllByItemId(item.getId())))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CommentDto addNewComment(Comment comment, Long userId, Long itemId) {
+        if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndBefore(
+                itemId, userId, BookingStatus.APPROVED, LocalDateTime.now())) {
+            throw new ValidationException();
+        }
+        comment.setItem(itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId))));
+        comment.setAuthor(userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
+        return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 }

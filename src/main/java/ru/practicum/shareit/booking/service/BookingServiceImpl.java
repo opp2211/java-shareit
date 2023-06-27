@@ -8,7 +8,7 @@ import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.storage.BookingRepo;
+import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
@@ -24,7 +24,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
-    private final BookingRepo bookingRepo;
+    private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
@@ -47,12 +47,12 @@ public class BookingServiceImpl implements BookingService {
         booking.setBooker(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
         booking.setStatus(BookingStatus.WAITING);
-        return bookingRepo.save(booking);
+        return bookingRepository.save(booking);
     }
 
     @Override
     public Booking confirmBooking(Long bookingId, boolean approved, Long userId) {
-        Booking booking = bookingRepo.findById(bookingId)
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(String.format("Booking ID = %d not found!", bookingId)));
         if (!Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             throw new NotFoundException("Owner ID and confirmer ID mismatch!");
@@ -65,12 +65,12 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
-        return bookingRepo.save(booking);
+        return bookingRepository.save(booking);
     }
 
     @Override
     public Booking getBooking(Long bookingId, Long userId) {
-        Booking booking = bookingRepo.findById(bookingId)
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(String.format("Booking ID = %d not found!", bookingId)));
         if (!Objects.equals(booking.getBooker().getId(), userId) &&
                 !Objects.equals(booking.getItem().getOwner().getId(), userId)) {
@@ -92,18 +92,18 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (BookingState.valueOf(state)) {
             case ALL:
-                return bookingRepo.findAllByBookerIdOrderByStartDesc(bookerId);
+                return bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
             case PAST:
-                return bookingRepo.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
             case FUTURE:
-                return bookingRepo.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now());
             case CURRENT:
-                return bookingRepo.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
+                return bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
                         LocalDateTime.now(), LocalDateTime.now());
             case WAITING:
-                return bookingRepo.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
             case REJECTED:
-                return bookingRepo.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
             default:
                 throw new RuntimeException();
         }
@@ -122,18 +122,18 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (BookingState.valueOf(state)) {
             case ALL:
-                return bookingRepo.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+                return bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
             case PAST:
-                return bookingRepo.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(ownerId, LocalDateTime.now());
+                return bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(ownerId, LocalDateTime.now());
             case FUTURE:
-                return bookingRepo.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(ownerId, LocalDateTime.now());
+                return bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(ownerId, LocalDateTime.now());
             case CURRENT:
-                return bookingRepo.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(ownerId,
+                return bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(ownerId,
                         LocalDateTime.now(), LocalDateTime.now());
             case WAITING:
-                return bookingRepo.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.WAITING);
+                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.WAITING);
             case REJECTED:
-                return bookingRepo.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.REJECTED);
+                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.REJECTED);
             default:
                 throw new RuntimeException();
         }
