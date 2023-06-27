@@ -2,17 +2,21 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingNearest;
+import ru.practicum.shareit.booking.storage.BookingRepo;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.storage.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepo bookingRepo;
 
     @Override
     public ItemDto addNew(ItemDto itemDto, Long userId) {
@@ -39,7 +44,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
-        return ItemMapper.toItemDto(itemRepository.save(item));
+        return ItemMapper.toItemDto(itemRepository.save(item), null, null);
     }
 
     @Override
@@ -61,19 +66,28 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             item.setAvailable(itemDto.getAvailable());
         }
-        return ItemMapper.toItemDto(itemRepository.save(item));
+        return ItemMapper.toItemDto(itemRepository.save(item), null, null);
     }
 
     @Override
-    public ItemDto getById(Long itemId) {
-        return ItemMapper.toItemDto(itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId))));
+    public ItemDto getById(Long itemId, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId)));
+        BookingNearest lastBooking = null;
+        BookingNearest nextBooking = null;
+        if (Objects.equals(item.getOwner().getId(), userId)) {
+            lastBooking = bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(itemId, LocalDateTime.now());
+            nextBooking = bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(itemId, LocalDateTime.now());
+        }
+        return ItemMapper.toItemDto(item, lastBooking, nextBooking);
     }
 
     @Override
     public List<ItemDto> getAllOwnerItems(Long userId) {
         return itemRepository.findAllByOwnerId(userId).stream()
-                .map(ItemMapper::toItemDto)
+                .map(item -> ItemMapper.toItemDto(item,
+                        bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(item.getId(), LocalDateTime.now()),
+                        bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(item.getId(), LocalDateTime.now())))
                 .collect(Collectors.toList());
     }
 
@@ -83,7 +97,9 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         }
         return itemRepository.searchAvailByText(text).stream()
-                .map(ItemMapper::toItemDto)
+                .map(item -> ItemMapper.toItemDto(item,
+                        bookingRepo.findFirstByItemIdAndEndBeforeOrderByStartDesc(item.getId(), LocalDateTime.now()),
+                        bookingRepo.findFirstByItemIdAndStartAfterOrderByStartAsc(item.getId(), LocalDateTime.now())))
                 .collect(Collectors.toList());
     }
 }
