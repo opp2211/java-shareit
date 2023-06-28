@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.storage;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.practicum.shareit.booking.dto.BookingNearest;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 
@@ -31,11 +30,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                                                                 LocalDateTime startBefore,
                                                                                 LocalDateTime endAfter);
 
+    List<Booking> findAllByItemOwnerIdAndStatus(Long ownerId, BookingStatus bookingStatus);
+
+    List<Booking> findAllByStatus(BookingStatus bookingStatus);
+
     List<Booking> findAllByItemOwnerIdAndStatusOrderByStartDesc(Long bookerId, BookingStatus bookingStatus);
 
-    BookingNearest findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(Long itemId, BookingStatus status, LocalDateTime startBefore);
+    Booking findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(Long itemId, BookingStatus status, LocalDateTime startBefore);
 
-    BookingNearest findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(Long itemId, BookingStatus status, LocalDateTime startAfter);
+    Booking findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(Long itemId, BookingStatus status, LocalDateTime startAfter);
 
     boolean existsByItemIdAndBookerIdAndStatusAndEndBefore(Long itemId, Long userId, BookingStatus status, LocalDateTime endBefore);
 }

@@ -3,7 +3,9 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingNearest;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
@@ -20,10 +22,7 @@ import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,10 +86,10 @@ public class ItemServiceImpl implements ItemService {
         BookingNearest lastBooking = null;
         BookingNearest nextBooking = null;
         if (Objects.equals(item.getOwner().getId(), userId)) {
-            lastBooking = bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
-                    itemId, BookingStatus.APPROVED, LocalDateTime.now());
-            nextBooking = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                    itemId, BookingStatus.APPROVED, LocalDateTime.now());
+            lastBooking = BookingMapper.toBookingNearest(bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
+                    itemId, BookingStatus.APPROVED, LocalDateTime.now()));
+            nextBooking = BookingMapper.toBookingNearest(bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                    itemId, BookingStatus.APPROVED, LocalDateTime.now()));
         }
         List<Comment> comments = commentRepository.findAllByItemId(itemId);
         return ItemMapper.toItemDto(item, lastBooking, nextBooking, comments);
@@ -99,13 +98,27 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemDto> getAllOwnerItems(Long userId) {
+        List<Booking> unfilteredBookings = bookingRepository
+                .findAllByItemOwnerIdAndStatus(userId, BookingStatus.APPROVED);
+        List<Comment> unfilteredComments = commentRepository.findAll();
+
         return itemRepository.findAllByOwnerId(userId).stream()
                 .map(item -> ItemMapper.toItemDto(item,
-                        bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
-                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
-                        bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
-                        commentRepository.findAllByItemId(item.getId())))
+                        unfilteredBookings.stream()
+                                .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                        booking.getStart().isBefore(LocalDateTime.now()))
+                                .map(BookingMapper::toBookingNearest)
+                                .max(Comparator.comparing(BookingNearest::getStart, LocalDateTime::compareTo))
+                                .orElse(null),
+                        unfilteredBookings.stream()
+                                .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                        booking.getStart().isAfter(LocalDateTime.now()))
+                                .map(BookingMapper::toBookingNearest)
+                                .min(Comparator.comparing(BookingNearest::getStart, LocalDateTime::compareTo))
+                                .orElse(null),
+                        unfilteredComments.stream()
+                                .filter(comment -> Objects.equals(comment.getItem().getId(), item.getId()))
+                                .collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }
 
@@ -115,13 +128,26 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return new ArrayList<>();
         }
+        List<Booking> unfilteredBookings = bookingRepository
+                .findAllByStatus(BookingStatus.APPROVED);
+        List<Comment> unfilteredComments = commentRepository.findAll();
         return itemRepository.searchAvailByText(text).stream()
                 .map(item -> ItemMapper.toItemDto(item,
-                        bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
-                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
-                        bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                                item.getId(), BookingStatus.APPROVED, LocalDateTime.now()),
-                        commentRepository.findAllByItemId(item.getId())))
+                        unfilteredBookings.stream()
+                                .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                        booking.getStart().isBefore(LocalDateTime.now()))
+                                .map(BookingMapper::toBookingNearest)
+                                .max(Comparator.comparing(BookingNearest::getStart, LocalDateTime::compareTo))
+                                .orElse(null),
+                        unfilteredBookings.stream()
+                                .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                        booking.getStart().isAfter(LocalDateTime.now()))
+                                .map(BookingMapper::toBookingNearest)
+                                .min(Comparator.comparing(BookingNearest::getStart, LocalDateTime::compareTo))
+                                .orElse(null),
+                        unfilteredComments.stream()
+                                .filter(comment -> Objects.equals(comment.getItem().getId(), item.getId()))
+                                .collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }
 
