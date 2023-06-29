@@ -2,12 +2,13 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.AlreadyExistException;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,49 +16,50 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public UserDto addNew(UserDto userDto) {
-        if (!userStorage.isFreeEmail(userDto.getEmail())) {
-            throw new AlreadyExistException("Email is already taken!");
-        }
         if (userDto.getEmail() == null) {
             throw new ValidationException("Email field cannot be null!");
         }
-        User user = userStorage.addNew(UserMapper.toUser(userDto));
+        User user = userRepository.save(UserMapper.toUser(userDto));
         return UserMapper.toUserDto(user);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getById(Long id) {
-        return UserMapper.toUserDto(userStorage.getById(id));
+        return UserMapper.toUserDto(userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", id))));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> getAll() {
-        return userStorage.getAll().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public UserDto patchUpdate(Long id, UserDto userDto) {
-        User user = userStorage.getById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", id)));
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }
         if (userDto.getEmail() != null) {
-            if (!user.getEmail().equals(userDto.getEmail()) && !userStorage.isFreeEmail(userDto.getEmail())) {
-                throw new AlreadyExistException("Email is already taken");
-            }
             user.setEmail(userDto.getEmail());
         }
-        return UserMapper.toUserDto(userStorage.update(user));
+        return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
+    @Transactional
     public void remove(Long id) {
-        userStorage.remove(id);
+        userRepository.deleteById(id);
     }
 }

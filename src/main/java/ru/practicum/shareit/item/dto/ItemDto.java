@@ -2,7 +2,10 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.practicum.shareit.booking.dto.BookingNearest;
 import ru.practicum.shareit.user.validator.NullableNotBlank;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -13,4 +16,9 @@ public class ItemDto {
     @NullableNotBlank(message = "Description field cannot be blank")
     private String description;
     private Boolean available;
+
+    private BookingNearest lastBooking;
+
+    private BookingNearest nextBooking;
+    private List<CommentDto> comments;
 }
