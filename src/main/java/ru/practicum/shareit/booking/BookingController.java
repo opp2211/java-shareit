@@ -1,17 +1,20 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
+@Validated
 public class BookingController {
     private final BookingService bookingService;
 
@@ -36,13 +39,17 @@ public class BookingController {
 
     @GetMapping
     public List<Booking> getAllByBookerIdAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                  @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getAllByBookerIdAndState(userId, state);
+                                                  @RequestParam(defaultValue = "ALL") String state,
+                                                  @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                  @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return bookingService.getAllByBookerIdAndState(userId, state, from, size);
     }
 
     @GetMapping("/owner")
     public List<Booking> getAllByOwnerIdAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                 @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getAllByOwnerIdAndState(userId, state);
+                                                 @RequestParam(defaultValue = "ALL") String state,
+                                                 @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                 @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return bookingService.getAllByOwnerIdAndState(userId, state, from, size);
     }
 }

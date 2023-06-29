@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateItemDto;
@@ -9,11 +10,13 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
@@ -35,13 +38,17 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDtoWithBooking> getAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getAllOwnerItems(userId);
+    public List<ItemDtoWithBooking> getAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                                     @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                     @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return itemService.getAllOwnerItems(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDtoWithBooking> findAvailableByText(@RequestParam String text) {
-        return itemService.findAvailableByText(text);
+    public List<ItemDtoWithBooking> findAvailableByText(@RequestParam String text,
+                                                        @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                        @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return itemService.findAvailableByText(text, from, size);
     }
 
     @PostMapping("{itemId}/comment")

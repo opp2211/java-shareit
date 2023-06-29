@@ -10,7 +10,7 @@ public interface ItemRequestService {
 
     List<ItemRequestWithItemsDto> getAllOwn(Long ownerId);
 
-    List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer from, Integer size);
+    List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer fromElement, Integer size);
 
     ItemRequestWithItemsDto getById(Long requestId, Long userId);
 }

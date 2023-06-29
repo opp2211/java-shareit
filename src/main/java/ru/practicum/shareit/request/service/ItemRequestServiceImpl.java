@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDtoForItemRequest;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.storage.ItemRepository;
@@ -56,12 +57,16 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer from, Integer size) {
+    public List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer fromElement, Integer size) {
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        int fromPage = fromElement / size;
         List<ItemDtoForItemRequest> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
                 .map(ItemMapper::toItemDtoForItemRequest)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterIdNot(
-                        userId, PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created")))
+                        userId, PageRequest.of(fromPage, size, Sort.by(Sort.Direction.DESC, "created")))
                 .stream()
                 .map(ItemRequestMapper::toItemRequestWithItemsDto)
                 .peek(itemRequestWithItemsDto -> itemRequestWithItemsDto.setItems(

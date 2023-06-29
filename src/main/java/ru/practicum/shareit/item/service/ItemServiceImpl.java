@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
@@ -101,12 +102,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDtoWithBooking> getAllOwnerItems(Long userId) {
+    public List<ItemDtoWithBooking> getAllOwnerItems(Long userId, Integer fromElement, Integer size) {
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        int fromPage = fromElement / size;
         List<Booking> unfilteredBookings = bookingRepository
                 .findAllByItemOwnerIdAndStatus(userId, BookingStatus.APPROVED);
         List<Comment> unfilteredComments = commentRepository.findAll();
 
-        return itemRepository.findAllByOwnerId(userId).stream()
+        return itemRepository.findAllByOwnerId(userId, PageRequest.of(fromPage, size)).stream()
                 .map(item -> ItemMapper.toItemDtoWithBooking(item,
                         unfilteredBookings.stream()
                                 .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
@@ -128,14 +133,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDtoWithBooking> findAvailableByText(String text) {
+    public List<ItemDtoWithBooking> findAvailableByText(String text, Integer fromElement, Integer size) {
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        int fromPage = fromElement / size;
         if (text.isBlank()) {
             return new ArrayList<>();
         }
         List<Booking> unfilteredBookings = bookingRepository
                 .findAllByStatus(BookingStatus.APPROVED);
         List<Comment> unfilteredComments = commentRepository.findAll();
-        return itemRepository.searchAvailByText(text).stream()
+        return itemRepository.searchAvailByText(text, PageRequest.of(fromPage, size)).stream()
                 .map(item -> ItemMapper.toItemDtoWithBooking(item,
                         unfilteredBookings.stream()
                                 .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&

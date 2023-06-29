@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -85,7 +87,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Booking> getAllByBookerIdAndState(Long bookerId, String state) {
+    public List<Booking> getAllByBookerIdAndState(Long bookerId, String state, Integer fromElement, Integer size) {
         if (Arrays.stream(BookingState.values())
                 .map(BookingState::name)
                 .map(String::toUpperCase)
@@ -95,20 +97,29 @@ public class BookingServiceImpl implements BookingService {
         if (!userRepository.existsById(bookerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", bookerId));
         }
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        int fromPage = fromElement / size;
+        Pageable pageable = PageRequest.of(fromPage, size);
         switch (BookingState.valueOf(state)) {
             case ALL:
-                return bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
+                return bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageable).toList();
             case PAST:
-                return bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(
+                        bookerId, LocalDateTime.now(), pageable).toList();
             case FUTURE:
-                return bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(
+                        bookerId, LocalDateTime.now(), pageable).toList();
             case CURRENT:
-                return bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
-                        LocalDateTime.now(), LocalDateTime.now());
+                return bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+                        bookerId, LocalDateTime.now(), LocalDateTime.now(), pageable).toList();
             case WAITING:
-                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(
+                        bookerId, BookingStatus.WAITING, pageable).toList();
             case REJECTED:
-                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(
+                        bookerId, BookingStatus.REJECTED, pageable).toList();
             default:
                 throw new RuntimeException();
         }
@@ -116,7 +127,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Booking> getAllByOwnerIdAndState(Long ownerId, String state) {
+    public List<Booking> getAllByOwnerIdAndState(Long ownerId, String state, Integer fromElement, Integer size) {
         if (Arrays.stream(BookingState.values())
                 .map(BookingState::name)
                 .map(String::toUpperCase)
@@ -126,20 +137,29 @@ public class BookingServiceImpl implements BookingService {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", ownerId));
         }
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        int fromPage = fromElement / size;
+        Pageable pageable = PageRequest.of(fromPage, size);
         switch (BookingState.valueOf(state)) {
             case ALL:
-                return bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+                return bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId, pageable).toList();
             case PAST:
-                return bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(ownerId, LocalDateTime.now());
+                return bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(
+                        ownerId, LocalDateTime.now(), pageable).toList();
             case FUTURE:
-                return bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(ownerId, LocalDateTime.now());
+                return bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(
+                        ownerId, LocalDateTime.now(), pageable).toList();
             case CURRENT:
-                return bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(ownerId,
-                        LocalDateTime.now(), LocalDateTime.now());
+                return bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+                        ownerId, LocalDateTime.now(), LocalDateTime.now(), pageable).toList();
             case WAITING:
-                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.WAITING);
+                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        ownerId, BookingStatus.WAITING, pageable).toList();
             case REJECTED:
-                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.REJECTED);
+                return bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        ownerId, BookingStatus.REJECTED, pageable).toList();
             default:
                 throw new RuntimeException();
         }
