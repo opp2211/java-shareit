@@ -21,8 +21,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto addNew(UserDto userDto) {
-        if (userDto.getEmail() == null) {
-            throw new ValidationException("Email field cannot be null!");
+        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+            throw new ValidationException("Email field cannot be null or blank!");
         }
         User user = userRepository.save(UserMapper.toUser(userDto));
         return UserMapper.toUserDto(user);
