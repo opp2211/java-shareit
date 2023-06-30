@@ -102,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
         }
         int fromPage = fromElement / size;
         Pageable pageable = PageRequest.of(fromPage, size);
-        switch (BookingState.valueOf(state)) {
+        switch (BookingState.valueOf(state.toUpperCase())) {
             case ALL:
                 return bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageable).toList();
             case PAST:
@@ -142,7 +142,7 @@ public class BookingServiceImpl implements BookingService {
         }
         int fromPage = fromElement / size;
         Pageable pageable = PageRequest.of(fromPage, size);
-        switch (BookingState.valueOf(state)) {
+        switch (BookingState.valueOf(state.toUpperCase())) {
             case ALL:
                 return bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId, pageable).toList();
             case PAST:
