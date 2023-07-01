@@ -29,6 +29,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class BookingServiceImplTest {
+    private final LocalDateTime start = LocalDateTime.now().plusMinutes(30);
+    private final LocalDateTime end = LocalDateTime.now().plusHours(1);
     private BookingServiceImpl bookingService;
     @Mock
     private BookingRepository bookingRepository;
@@ -36,9 +38,6 @@ public class BookingServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private ItemRepository itemRepository;
-
-    private final LocalDateTime start = LocalDateTime.now().plusMinutes(30);
-    private final LocalDateTime end = LocalDateTime.now().plusHours(1);
     private User user1;
     private User user2;
     private Item item1;

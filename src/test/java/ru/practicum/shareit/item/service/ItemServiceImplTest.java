@@ -146,7 +146,7 @@ public class ItemServiceImplTest {
                 .thenReturn(Optional.of(item2.getOwner()));
         Mockito
                 .when(itemRequestRepository.findById(createItemDto.getRequestId()))
-                        .thenReturn(Optional.of(itemRequest1));
+                .thenReturn(Optional.of(itemRequest1));
         Mockito
                 .when(itemRepository.save(Mockito.any(Item.class)))
                 .thenAnswer(invocationOnMock -> {
@@ -163,7 +163,7 @@ public class ItemServiceImplTest {
         Mockito.verify(userRepository, Mockito.times(1))
                 .findById(userId);
         Mockito.verify(itemRequestRepository, Mockito.times(1))
-                        .findById(createItemDto.getRequestId());
+                .findById(createItemDto.getRequestId());
         Mockito.verify(itemRepository, Mockito.times(1))
                 .save(Mockito.any(Item.class));
         Mockito.verifyNoMoreInteractions(userRepository, itemRepository);
@@ -275,7 +275,7 @@ public class ItemServiceImplTest {
                 .thenReturn(Optional.of(item1));
         Mockito.when(bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
                         Mockito.anyLong(), Mockito.any(BookingStatus.class), Mockito.any(LocalDateTime.class)))
-                        .thenReturn(booking1);
+                .thenReturn(booking1);
         Mockito.when(commentRepository.findAllByItemId(itemId))
                 .thenReturn(Collections.singletonList(comment1));
         //when
@@ -290,11 +290,11 @@ public class ItemServiceImplTest {
         Mockito.verify(itemRepository, Mockito.times(1))
                 .findById(itemId);
         Mockito.verify(bookingRepository, Mockito.times(1))
-                        .findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
-                                Mockito.anyLong(), Mockito.any(BookingStatus.class), Mockito.any(LocalDateTime.class));
+                .findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(BookingStatus.class), Mockito.any(LocalDateTime.class));
         Mockito.verify(bookingRepository, Mockito.times(1))
-                        .findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                                Mockito.anyLong(), Mockito.any(BookingStatus.class), Mockito.any(LocalDateTime.class));
+                .findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                        Mockito.anyLong(), Mockito.any(BookingStatus.class), Mockito.any(LocalDateTime.class));
         Mockito.verify(commentRepository, Mockito.times(1))
                 .findAllByItemId(itemId);
         Mockito.verifyNoMoreInteractions(itemRepository, bookingRepository, commentRepository);

@@ -68,6 +68,7 @@ public class UserServiceImplTest {
                 .save(Mockito.any(User.class));
         Mockito.verifyNoMoreInteractions(userRepository);
     }
+
     @Test
     void testAddNewBlankEmail() {
         //given
