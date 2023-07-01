@@ -19,6 +19,15 @@ public class ItemMapper {
                 .build();
     }
 
+    public static CreateItemDto toCreateItemDto(Item item) {
+        return CreateItemDto.builder()
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.isAvailable())
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
+                .build();
+    }
+
     public static ItemDtoWithBooking toItemDtoWithBooking(Item item, BookingNearest lastBooking, BookingNearest nextBooking,
                                                           List<Comment> comments) {
         return ItemDtoWithBooking.builder()

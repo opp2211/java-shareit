@@ -36,19 +36,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDtoWithBooking addNew(CreateItemDto createItemDto, Long userId) {
-        if (userId == null) {
-            throw new ValidationException("User ID cannot be null");
-        }
-        if (createItemDto.getName() == null) {
-            throw new ValidationException("Name field cannot be null");
-        }
-        if (createItemDto.getDescription() == null) {
-            throw new ValidationException("Description field cannot be null");
-        }
-        if (createItemDto.getAvailable() == null) {
-            throw new ValidationException("Available field cannot be null");
-        }
-
         Item item = ItemMapper.toItem(createItemDto);
         item.setOwner(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
