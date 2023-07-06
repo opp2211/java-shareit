@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.dto.CreateItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
 import ru.practicum.shareit.item.service.ItemService;
@@ -31,8 +32,6 @@ public class BookingServiceImplIntegrationTest {
     private final BookingService bookingService;
     private final UserService userService;
     private final ItemService itemService;
-
-    Booking booking1;
 
     @BeforeEach
     void beforeEach() {
@@ -58,10 +57,12 @@ public class BookingServiceImplIntegrationTest {
                         .build(),
                 userDto1.getId());
         //when
+        LocalDateTime start = LocalDateTime.now().plusHours(2);
+        LocalDateTime end = LocalDateTime.now().plusHours(3);
         BookingDto bookingDto = BookingDto.builder()
                 .itemId(itemDto.getId())
-                .start(LocalDateTime.now().plusHours(2))
-                .end(LocalDateTime.now().plusHours(3))
+                .start(start)
+                .end(end)
                 .build();
         Long bookerId = userDto2.getId();
         bookingService.addNew(bookingDto, bookerId);
@@ -71,5 +72,11 @@ public class BookingServiceImplIntegrationTest {
 
         assertThat(actualBookings.size(), equalTo(1));
         assertThat(actualBookings.get(0).getId(), notNullValue());
+        assertThat(actualBookings.get(0).getStart(), equalTo(start));
+        assertThat(actualBookings.get(0).getEnd(), equalTo(end));
+        assertThat(actualBookings.get(0).getItem().getId(), equalTo(itemDto.getId()));
+        assertThat(actualBookings.get(0).getItem().getName(), equalTo("Item 1 name"));
+        assertThat(actualBookings.get(0).getBooker().getId(), equalTo(bookerId));
+        assertThat(actualBookings.get(0).getStatus(), equalTo(BookingStatus.WAITING));
     }
 }
