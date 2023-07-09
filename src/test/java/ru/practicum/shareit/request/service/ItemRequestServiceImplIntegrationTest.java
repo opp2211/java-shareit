@@ -24,6 +24,7 @@ public class ItemRequestServiceImplIntegrationTest {
     private final UserService userService;
     private final ItemService itemService;
     private final ItemRequestService itemRequestService;
+
     @Test
     void testGetById() {
         //given
