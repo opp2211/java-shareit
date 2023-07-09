@@ -6,6 +6,7 @@ import ru.practicum.shareit.booking.dto.BookingNearest;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,19 @@ public class ItemMapper {
                 .comments(comments.stream()
                         .map(CommentMapper::toCommentDto)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static ItemDtoWithBooking toItemDtoWithBooking(Item item) {
+        return ItemDtoWithBooking.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.isAvailable())
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
+                .lastBooking(null)
+                .nextBooking(null)
+                .comments(Collections.EMPTY_LIST)
                 .build();
     }
 
