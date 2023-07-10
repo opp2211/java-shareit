@@ -156,7 +156,7 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addNewComment(Comment comment, Long userId, Long itemId) {
         if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndBefore(
                 itemId, userId, BookingStatus.APPROVED, LocalDateTime.now())) {
-            throw new ValidationException();
+            throw new ValidationException("");
         }
         comment.setItem(itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId))));

@@ -405,6 +405,9 @@ public class BookingServiceImplTest {
         String state = "ALLY";
         Integer defaultFromElement = 0;
         Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(bookerId))
+                .thenReturn(true);
         //when
         //then
         ValidationException e = Assertions.assertThrows(ValidationException.class,
@@ -444,5 +447,153 @@ public class BookingServiceImplTest {
         ValidationException e = Assertions.assertThrows(ValidationException.class,
                 () -> bookingService.getAllByBookerIdAndState(bookerId, state, defaultFromElement, defaultSize));
         assertThat(e.getMessage(), equalTo("Element index and page size mismatch!"));
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStateDefaultParams() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "ALL";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdOrderByStartDesc(Mockito.anyLong(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdOrderByStartDesc(Mockito.anyLong(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStatePast() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "PAST";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStateFuture() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "Future";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdAndStartAfterOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStateCurrent() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "Current";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStateWaiting() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "Waiting";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
+    }
+
+    @Test
+    void testGetAllByOwnerIdAndStateRejected() {
+        //given
+        Long ownerId = 1L;
+        String defaultState = "Rejected";
+        Integer defaultFromElement = 0;
+        Integer defaultSize = 20;
+        Mockito
+                .when(userRepository.existsById(ownerId))
+                .thenReturn(true);
+        Mockito
+                .when(bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class)))
+                .thenReturn(Page.empty());
+        //when
+        bookingService.getAllByOwnerIdAndState(ownerId, defaultState, defaultFromElement, defaultSize);
+        //then
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(ownerId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findAllByItemOwnerIdAndStatusOrderByStartDesc(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(userRepository, bookingRepository);
     }
 }

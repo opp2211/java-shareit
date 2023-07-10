@@ -24,12 +24,12 @@ public class CommonHandler {
         return new ExceptionResponse(e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ExceptionResponse handleAlreadyExist(AlreadyExistException e) {
-        log.debug(e.getMessage(), e);
-        return new ExceptionResponse(e.getMessage());
-    }
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.CONFLICT)
+//    public ExceptionResponse handleAlreadyExist(AlreadyExistException e) {
+//        log.debug(e.getMessage(), e);
+//        return new ExceptionResponse(e.getMessage());
+//    }
 
     @ExceptionHandler({ValidationException.class,
             MethodArgumentNotValidException.class,

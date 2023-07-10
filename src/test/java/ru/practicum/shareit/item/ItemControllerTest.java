@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -134,6 +135,20 @@ class ItemControllerTest {
         Mockito.verify(itemService, Mockito.never())
                 .patchUpdate(Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.verifyNoMoreInteractions(itemService);
+    }
+
+    @SneakyThrows
+    @Test
+    void patchUpdate_whenIdMismatch_thenForbidden() {
+        ItemDtoWithBooking itemDto = ItemMapper.toItemDtoWithBooking(
+                item1, null, null, Collections.EMPTY_LIST);
+        Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new AccessDeniedException(""));
+        mockMvc.perform(patch("/items/{itemId}", item1.getId())
+                        .contentType("application/json")
+                        .header("X-Sharer-User-Id", 0)
+                        .content(objectMapper.writeValueAsString(itemDto)))
+                .andExpect(status().isForbidden());
     }
 
     @SneakyThrows

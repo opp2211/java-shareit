@@ -88,12 +88,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<Booking> getAllByBookerIdAndState(Long bookerId, String state, Integer fromElement, Integer size) {
-        if (Arrays.stream(BookingState.values())
-                .map(BookingState::name)
-                .map(String::toUpperCase)
-                .noneMatch(state.toUpperCase()::equals)) {
-            throw new ValidationException(String.format("Unknown state: %s", state.toUpperCase()));
-        }
         if (!userRepository.existsById(bookerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", bookerId));
         }
@@ -102,26 +96,26 @@ public class BookingServiceImpl implements BookingService {
         }
         int fromPage = fromElement / size;
         Pageable pageable = PageRequest.of(fromPage, size);
-        switch (BookingState.valueOf(state.toUpperCase())) {
-            case ALL:
+        switch (state.toUpperCase()) {
+            case "ALL":
                 return bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageable).toList();
-            case PAST:
+            case "PAST":
                 return bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(
                         bookerId, LocalDateTime.now(), pageable).toList();
-            case FUTURE:
+            case "FUTURE":
                 return bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(
                         bookerId, LocalDateTime.now(), pageable).toList();
-            case CURRENT:
+            case "CURRENT":
                 return bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(
                         bookerId, LocalDateTime.now(), LocalDateTime.now(), pageable).toList();
-            case WAITING:
+            case "WAITING":
                 return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(
                         bookerId, BookingStatus.WAITING, pageable).toList();
-            case REJECTED:
+            case "REJECTED":
                 return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(
                         bookerId, BookingStatus.REJECTED, pageable).toList();
             default:
-                throw new RuntimeException();
+                throw new ValidationException(String.format("Unknown state: %s", state.toUpperCase()));
         }
     }
 

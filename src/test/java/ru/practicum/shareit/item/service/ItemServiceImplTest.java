@@ -15,6 +15,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -333,4 +335,47 @@ public class ItemServiceImplTest {
                 .searchAvailByText(Mockito.anyString(), Mockito.any(Pageable.class));
         Mockito.verifyNoMoreInteractions(bookingRepository, commentRepository, itemRepository);
     }
+
+    @Test
+    void testAddNewComment_whenValid() {
+        Long itemId = item1.getId();
+        Long userId = user2.getId();
+        Comment requestComment = Comment.builder()
+                .text("text")
+                .build();
+        Comment expectedComment = Comment.builder()
+                .id(1L)
+                .text(requestComment.getText())
+                .item(item1)
+                .author(user2)
+                .created(LocalDateTime.now().minusHours(1))
+                .build();
+        Mockito
+                .when(bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndBefore(
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(true);
+        Mockito
+                .when(itemRepository.findById(itemId))
+                .thenReturn(Optional.of(item1));
+        Mockito
+                .when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user2));
+        Mockito
+                .when(commentRepository.save(Mockito.any()))
+                .thenAnswer(invocationOnMock -> {
+                   Comment comment = invocationOnMock.getArgument(0, Comment.class);
+                   comment.setId(expectedComment.getId());
+                   comment.setCreated(expectedComment.getCreated());
+                   return comment;
+                });
+
+        CommentDto actualComment = itemService.addNewComment(requestComment, userId, itemId);
+
+        assertThat(actualComment.getId(), equalTo(expectedComment.getId()));
+        assertThat(actualComment.getText(), equalTo(expectedComment.getText()));
+        assertThat(actualComment.getAuthorName(), equalTo(expectedComment.getAuthor().getName()));
+        assertThat(actualComment.getCreated(), equalTo(expectedComment.getCreated()));
+    }
+
+
 }
