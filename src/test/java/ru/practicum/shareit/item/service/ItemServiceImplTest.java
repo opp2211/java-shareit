@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -363,10 +362,10 @@ public class ItemServiceImplTest {
         Mockito
                 .when(commentRepository.save(Mockito.any()))
                 .thenAnswer(invocationOnMock -> {
-                   Comment comment = invocationOnMock.getArgument(0, Comment.class);
-                   comment.setId(expectedComment.getId());
-                   comment.setCreated(expectedComment.getCreated());
-                   return comment;
+                    Comment comment = invocationOnMock.getArgument(0, Comment.class);
+                    comment.setId(expectedComment.getId());
+                    comment.setCreated(expectedComment.getCreated());
+                    return comment;
                 });
 
         CommentDto actualComment = itemService.addNewComment(requestComment, userId, itemId);
