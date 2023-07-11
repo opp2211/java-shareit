@@ -15,6 +15,14 @@ public class BookingMapper {
                 .build();
     }
 
+    public static BookingDto toBookingDto(Booking booking) {
+        return BookingDto.builder()
+                .itemId(booking.getItem().getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .build();
+    }
+
     public static BookingNearest toBookingNearest(Booking booking) {
         if (booking == null) {
             return null;

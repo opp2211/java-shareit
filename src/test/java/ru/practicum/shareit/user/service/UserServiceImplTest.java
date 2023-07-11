@@ -1,0 +1,165 @@
+package ru.practicum.shareit.user.service;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.storage.UserRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+@ExtendWith(MockitoExtension.class)
+public class UserServiceImplTest {
+    private UserServiceImpl userService;
+    @Mock
+    private UserRepository userRepository;
+
+    private User user1;
+    private User user2;
+
+    @BeforeEach
+    void beforeEach() {
+        userService = new UserServiceImpl(userRepository);
+        user1 = User.builder()
+                .id(1L)
+                .name("User1 name")
+                .email("user1@email.ru")
+                .build();
+        user2 = User.builder()
+                .id(2L)
+                .name("User2 name")
+                .email("user2@email.ru")
+                .build();
+    }
+
+    @Test
+    void testAddNew() {
+        //given
+        user1.setId(null);
+        Long newUserId = 1L;
+        UserDto userDto = UserMapper.toUserDto(user1);
+        Mockito
+                .when(userRepository.save(Mockito.any(User.class)))
+                .thenAnswer(invocationOnMock -> {
+                    User user = invocationOnMock.getArgument(0, User.class);
+                    user.setId(newUserId);
+                    return user;
+                });
+        //when
+        UserDto actualUserDto = userService.addNew(userDto);
+        //then
+        assertThat(actualUserDto.getId(), equalTo(newUserId));
+        assertThat(actualUserDto.getName(), equalTo(userDto.getName()));
+        assertThat(actualUserDto.getEmail(), equalTo(userDto.getEmail()));
+        Mockito.verify(userRepository, Mockito.times(1))
+                .save(Mockito.any(User.class));
+        Mockito.verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void testAddNewBlankEmail() {
+        //given
+        UserDto userDto = UserDto.builder()
+                .name("User name")
+                .email("")
+                .build();
+        //when
+        //then
+        ValidationException e = Assertions.assertThrows(ValidationException.class,
+                () -> userService.addNew(userDto));
+        assertThat(e.getMessage(), equalTo("Email field cannot be null or blank!"));
+    }
+
+    @Test
+    void testGetById() {
+        //given
+        Long userId = user1.getId();
+        Mockito
+                .when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user1));
+        //when
+        UserDto actualUserDto = userService.getById(userId);
+        //then
+        assertThat(actualUserDto.getId(), equalTo(userId));
+        assertThat(actualUserDto.getName(), equalTo(user1.getName()));
+        assertThat(actualUserDto.getEmail(), equalTo(user1.getEmail()));
+        Mockito.verify(userRepository, Mockito.times(1))
+                .findById(userId);
+        Mockito.verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void testGetByIdWrongUserId() {
+        //given
+        Long userId = 99L;
+        Mockito
+                .when(userRepository.findById(userId))
+                .thenReturn(Optional.empty());
+        //when
+        //then
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> userService.getById(userId));
+        assertThat(e.getMessage(), equalTo(String.format("User ID = %d not found!", userId)));
+    }
+
+    @Test
+    void testGetAll() {
+        //given
+        List<User> users = new ArrayList<>();
+        users.add(user1);
+        users.add(user2);
+        Mockito
+                .when(userRepository.findAll())
+                .thenReturn(users);
+        //when
+        List<UserDto> actualUsers = userService.getAll();
+        //then
+        assertThat(actualUsers.size(), equalTo(users.size()));
+        assertThat(actualUsers.get(0).getId(), equalTo(user1.getId()));
+        assertThat(actualUsers.get(1).getId(), equalTo(user2.getId()));
+        Mockito.verify(userRepository, Mockito.times(1))
+                .findAll();
+        Mockito.verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void testPatchUpdate() {
+        //given
+        Long user1Id = user1.getId();
+        String newUser1Name = "New user1 name";
+        UserDto userDto = UserDto.builder()
+                .name(newUser1Name)
+                .email(null)
+                .build();
+        Mockito
+                .when(userRepository.findById(user1Id))
+                .thenReturn(Optional.of(user1));
+        Mockito
+                .when(userRepository.save(user1))
+                .thenReturn(user1);
+        //when
+        UserDto actualUserDto = userService.patchUpdate(user1Id, userDto);
+        //then
+        assertThat(actualUserDto.getId(), equalTo(user1Id));
+        assertThat(actualUserDto.getName(), equalTo(newUser1Name));
+        assertThat(actualUserDto.getEmail(), equalTo(user1.getEmail()));
+        Mockito.verify(userRepository, Mockito.times(1))
+                .findById(user1Id);
+        Mockito.verify(userRepository, Mockito.times(1))
+                .save(user1);
+        Mockito.verifyNoMoreInteractions(userRepository);
+    }
+}

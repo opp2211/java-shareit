@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exception.AccessDeniedException;
-import ru.practicum.shareit.exception.AlreadyExistException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+
+import javax.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 @Slf4j
@@ -22,14 +23,16 @@ public class CommonHandler {
         return new ExceptionResponse(e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ExceptionResponse handleAlreadyExist(AlreadyExistException e) {
-        log.debug(e.getMessage(), e);
-        return new ExceptionResponse(e.getMessage());
-    }
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.CONFLICT)
+//    public ExceptionResponse handleAlreadyExist(AlreadyExistException e) {
+//        log.debug(e.getMessage(), e);
+//        return new ExceptionResponse(e.getMessage());
+//    }
 
-    @ExceptionHandler({ValidationException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({ValidationException.class,
+            MethodArgumentNotValidException.class,
+            ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handleValidation(Exception e) {
         log.debug(e.getMessage(), e);
