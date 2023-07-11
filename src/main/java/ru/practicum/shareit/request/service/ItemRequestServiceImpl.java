@@ -22,13 +22,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository itemRequestRepo;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
 
     @Override
-    @Transactional
     public ItemRequest addNew(ItemRequest itemRequest, Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId)));

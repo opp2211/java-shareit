@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -34,7 +35,6 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRequestRepository itemRequestRepo;
 
     @Override
-    @Transactional
     public ItemDtoWithBooking addNew(CreateItemDto createItemDto, Long userId) {
         Item item = ItemMapper.toItem(createItemDto);
         item.setOwner(userRepository.findById(userId)
@@ -48,7 +48,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
     public ItemDtoWithBooking patchUpdate(ItemDtoWithBooking itemDtoWithBooking, Long itemId, Long userId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId)));
@@ -152,7 +151,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
     public CommentDto addNewComment(Comment comment, Long userId, Long itemId) {
         if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndBefore(
                 itemId, userId, BookingStatus.APPROVED, LocalDateTime.now())) {

@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
     public UserDto addNew(UserDto userDto) {
         if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
             throw new ValidationException("Email field cannot be null or blank!");
@@ -44,7 +44,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public UserDto patchUpdate(Long id, UserDto userDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", id)));
@@ -58,7 +57,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void remove(Long id) {
         userRepository.deleteById(id);
     }

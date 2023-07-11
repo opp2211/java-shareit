@@ -26,13 +26,13 @@ import java.util.Objects;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
     @Override
-    @Transactional
     public Booking addNew(BookingDto bookingDto, Long userId) {
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() ->
@@ -55,7 +55,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional
     public Booking confirmBooking(Long bookingId, boolean approved, Long userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(String.format("Booking ID = %d not found!", bookingId)));
