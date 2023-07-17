@@ -32,20 +32,26 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getById(
             @PathVariable
-            @Min(value = 1,
-                    message = "ID cannot be less than 1")
+            @Min(value = 1, message = "ID cannot be less than 1")
             Long id) {
         return userClient.getById(id);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Object> patchUpdate(@PathVariable Long id,
-                                              @RequestBody @Valid UserRequestDto userRequestDto) {
+    public ResponseEntity<Object> patchUpdate(
+            @PathVariable
+            @Min(value = 1, message = "ID cannot be less than 1")
+            Long id,
+            @RequestBody @Valid
+            UserRequestDto userRequestDto) {
         return userClient.patchUpdate(id, userRequestDto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> remove(@PathVariable Long id) {
+    public ResponseEntity<Object> remove(
+            @PathVariable
+            @Min(value = 1, message = "ID cannot be less than 1")
+            Long id) {
         return userClient.remove(id);
     }
 }
