@@ -19,7 +19,6 @@ import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,10 +38,6 @@ public class BookingServiceImpl implements BookingService {
                         new NotFoundException(String.format("Item ID = %d not found!", bookingDto.getItemId())));
         if (!item.isAvailable()) {
             throw new ValidationException(String.format("Item ID = %d is not available for booking!", item.getId()));
-        }
-        if (!bookingDto.getStart().isBefore(bookingDto.getEnd()) ||
-                bookingDto.getStart().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Invalid booking datetime!");
         }
         if (Objects.equals(item.getOwner().getId(), userId)) {
             throw new NotFoundException("Cant book own item!");
@@ -90,9 +85,6 @@ public class BookingServiceImpl implements BookingService {
         if (!userRepository.existsById(bookerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", bookerId));
         }
-        if (fromElement % size != 0) {
-            throw new ValidationException("Element index and page size mismatch!");
-        }
         int fromPage = fromElement / size;
         Pageable pageable = PageRequest.of(fromPage, size);
         switch (state.toUpperCase()) {
@@ -121,17 +113,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<Booking> getAllByOwnerIdAndState(Long ownerId, String state, Integer fromElement, Integer size) {
-        if (Arrays.stream(BookingState.values())
-                .map(BookingState::name)
-                .map(String::toUpperCase)
-                .noneMatch(state.toUpperCase()::equals)) {
-            throw new ValidationException(String.format("Unknown state: %s", state.toUpperCase()));
-        }
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", ownerId));
-        }
-        if (fromElement % size != 0) {
-            throw new ValidationException("Element index and page size mismatch!");
         }
         int fromPage = fromElement / size;
         Pageable pageable = PageRequest.of(fromPage, size);

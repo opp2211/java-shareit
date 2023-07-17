@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.client.BaseClient;
 
+import javax.validation.ValidationException;
 import java.util.Map;
 
 @Service
@@ -27,21 +28,48 @@ public class BookingClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> getBookings(long userId, BookingState state, Integer from, Integer size) {
+    public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {
+        if (!requestDto.getStart().isBefore(requestDto.getEnd())) {
+            throw new ValidationException("Invalid booking datetime!");
+        }
+        return post("", userId, requestDto);
+    }
+
+    public ResponseEntity<Object> confirmBooking(long bookingId, boolean approved, long userId) {
+        String path = "/" + bookingId + "?approved={approved}";
+        Map<String, Object> parameters = Map.of("approved", approved);
+        return patch(path, userId, parameters, null);
+    }
+
+    public ResponseEntity<Object> getBooking(long userId, Long bookingId) {
+        return get("/" + bookingId, userId);
+    }
+
+    public ResponseEntity<Object> getBookings(long userId, String state, Integer fromElement, Integer size) {
+        BookingState.from(state)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
         Map<String, Object> parameters = Map.of(
-                "state", state.name(),
-                "from", from,
+                "state", state,
+                "from", fromElement,
                 "size", size
         );
         return get("?state={state}&from={from}&size={size}", userId, parameters);
     }
 
-
-    public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {
-        return post("", userId, requestDto);
-    }
-
-    public ResponseEntity<Object> getBooking(long userId, Long bookingId) {
-        return get("/" + bookingId, userId);
+    public ResponseEntity<Object> getAllByOwnerIdAndState(long userId, String state, Integer fromElement, Integer size) {
+        BookingState.from(state)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
+        if (fromElement % size != 0) {
+            throw new ValidationException("Element index and page size mismatch!");
+        }
+        Map<String, Object> parameters = Map.of(
+                "state", state,
+                "from", fromElement,
+                "size", size
+        );
+        return get("/owner?state={state}&from={from}&size={size}", userId, parameters);
     }
 }
