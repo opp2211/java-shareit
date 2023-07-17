@@ -2,7 +2,8 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -14,23 +15,23 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserDto addNew(@RequestBody UserDto userDto) {
-        return userService.addNew(userDto);
+    public UserResponseDto addNew(@RequestBody UserRequestDto userRequestDto) {
+        return userService.addNew(userRequestDto);
     }
 
     @GetMapping
-    public List<UserDto> getAll() {
+    public List<UserResponseDto> getAll() {
         return userService.getAll();
     }
 
     @GetMapping("/{id}")
-    public UserDto getById(@PathVariable Long id) {
+    public UserResponseDto getById(@PathVariable Long id) {
         return userService.getById(id);
     }
 
     @PatchMapping("/{id}")
-    public UserDto patchUpdate(@PathVariable Long id, @RequestBody UserDto userDto) {
-        return userService.patchUpdate(id, userDto);
+    public UserResponseDto patchUpdate(@PathVariable Long id, @RequestBody UserRequestDto userRequestDto) {
+        return userService.patchUpdate(id, userRequestDto);
     }
 
     @DeleteMapping("/{id}")
