@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.dto.ItemDtoForItemRequest;
+import ru.practicum.shareit.item.dto.ItemWithIdResponseDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestMapper;
@@ -42,15 +42,15 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (!userRepo.existsById(ownerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", ownerId));
         }
-        List<ItemDtoForItemRequest> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
+        List<ItemWithIdResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
                 .map(ItemMapper::toItemDtoForItemRequest)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterId(ownerId).stream()
                 .map(ItemRequestMapper::toItemRequestWithItemsDto)
                 .peek(itemRequestWithItemsDto -> itemRequestWithItemsDto.setItems(
                         unfilteredItems.stream()
-                                .filter(itemDtoForItemRequest ->
-                                        itemDtoForItemRequest.getRequestId().equals(itemRequestWithItemsDto.getId()))
+                                .filter(itemWithIdResponseDto ->
+                                        itemWithIdResponseDto.getRequestId().equals(itemRequestWithItemsDto.getId()))
                                 .collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }
@@ -62,7 +62,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new ValidationException("Element index and page size mismatch!");
         }
         int fromPage = fromElement / size;
-        List<ItemDtoForItemRequest> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
+        List<ItemWithIdResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
                 .map(ItemMapper::toItemDtoForItemRequest)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterIdNot(
@@ -71,8 +71,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .map(ItemRequestMapper::toItemRequestWithItemsDto)
                 .peek(itemRequestWithItemsDto -> itemRequestWithItemsDto.setItems(
                         unfilteredItems.stream()
-                                .filter(itemDtoForItemRequest ->
-                                        itemDtoForItemRequest.getRequestId().equals(itemRequestWithItemsDto.getId()))
+                                .filter(itemWithIdResponseDto ->
+                                        itemWithIdResponseDto.getRequestId().equals(itemRequestWithItemsDto.getId()))
                                 .collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }

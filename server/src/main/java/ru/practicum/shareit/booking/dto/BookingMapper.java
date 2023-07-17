@@ -23,11 +23,11 @@ public class BookingMapper {
                 .build();
     }
 
-    public static BookingNearest toBookingNearest(Booking booking) {
+    public static BookingNearestDto toBookingNearest(Booking booking) {
         if (booking == null) {
             return null;
         }
-        return BookingNearest.builder()
+        return BookingNearestDto.builder()
                 .id(booking.getId())
                 .bookerId(booking.getBooker().getId())
                 .start(booking.getStart())

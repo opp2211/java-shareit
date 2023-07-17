@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingNearest {
+public class BookingNearestDto {
     private Long id;
     private Long bookerId;
     private LocalDateTime start;
