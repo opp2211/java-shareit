@@ -16,7 +16,6 @@ import ru.practicum.shareit.request.storage.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
-import javax.validation.ValidationException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,9 +57,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer fromElement, Integer size) {
-        if (fromElement % size != 0) {
-            throw new ValidationException("Element index and page size mismatch!");
-        }
         int fromPage = fromElement / size;
         List<ItemWithIdResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
                 .map(ItemMapper::toItemDtoForItemRequest)
