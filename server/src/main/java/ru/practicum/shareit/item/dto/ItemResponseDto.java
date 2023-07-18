@@ -13,4 +13,6 @@ public class ItemResponseDto {
     private String description;
 
     private boolean available;
+
+    private Long requestId;
 }

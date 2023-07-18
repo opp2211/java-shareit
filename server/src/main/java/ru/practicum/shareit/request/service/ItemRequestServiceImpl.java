@@ -6,8 +6,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemWithIdResponseDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestMapper;
 import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
@@ -41,8 +41,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (!userRepo.existsById(ownerId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", ownerId));
         }
-        List<ItemWithIdResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
-                .map(ItemMapper::toItemDtoForItemRequest)
+        List<ItemResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
+                .map(ItemMapper::toItemResponseDto)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterId(ownerId).stream()
                 .map(ItemRequestMapper::toItemRequestWithItemsDto)
@@ -58,8 +58,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Transactional(readOnly = true)
     public List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer fromElement, Integer size) {
         int fromPage = fromElement / size;
-        List<ItemWithIdResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
-                .map(ItemMapper::toItemDtoForItemRequest)
+        List<ItemResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
+                .map(ItemMapper::toItemResponseDto)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterIdNot(
                         userId, PageRequest.of(fromPage, size, Sort.by(Sort.Direction.DESC, "created")))
@@ -84,7 +84,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                         .orElseThrow(
                                 () -> new NotFoundException(String.format("Request ID = %d not found!", requestId))));
         itemRequestWithItemsDto.setItems(itemRepo.findAllByRequestId(requestId).stream()
-                .map(ItemMapper::toItemDtoForItemRequest)
+                .map(ItemMapper::toItemResponseDto)
                 .collect(Collectors.toList()));
         return itemRequestWithItemsDto;
     }

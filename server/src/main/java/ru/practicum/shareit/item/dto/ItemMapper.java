@@ -35,6 +35,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.isAvailable())
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
 
@@ -64,16 +65,6 @@ public class ItemMapper {
                 .lastBooking(null)
                 .nextBooking(null)
                 .comments(Collections.EMPTY_LIST)
-                .build();
-    }
-
-    public static ItemWithIdResponseDto toItemDtoForItemRequest(Item item) {
-        return ItemWithIdResponseDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.isAvailable())
-                .requestId(item.getRequest().getId())
                 .build();
     }
 }
