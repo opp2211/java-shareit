@@ -14,12 +14,12 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -142,29 +142,6 @@ public class BookingServiceImplTest {
         BookingDto bookingDto = BookingDto.builder()
                 .itemId(item1.getId())
                 .start(start)
-                .end(end)
-                .build();
-        Long user2Id = user2.getId();
-
-        Mockito
-                .when(itemRepository.findById(user1.getId()))
-                .thenReturn(Optional.of(item1));
-
-        //when
-        //then
-        Assertions.assertThrows(ValidationException.class,
-                () -> bookingService.addNew(bookingDto, user2Id));
-        Mockito.verify(itemRepository, Mockito.times(1))
-                .findById(item1.getId());
-        Mockito.verifyNoMoreInteractions(itemRepository);
-    }
-
-    @Test
-    void testAddNewEndBeforeStart() {
-        //given
-        BookingDto bookingDto = BookingDto.builder()
-                .itemId(item1.getId())
-                .start(start.plusHours(1))
                 .end(end)
                 .build();
         Long user2Id = user2.getId();
@@ -430,23 +407,6 @@ public class BookingServiceImplTest {
         NotFoundException e = Assertions.assertThrows(NotFoundException.class,
                 () -> bookingService.getAllByBookerIdAndState(bookerId, state, defaultFromElement, defaultSize));
         assertThat(e.getMessage(), equalTo(String.format("User ID = %d not found!", bookerId)));
-    }
-
-    @Test
-    void testGetAllByBookerIdAndStateWithInvalidPageParams() {
-        //given
-        Long bookerId = 1L;
-        String state = "ALL";
-        Integer defaultFromElement = 10;
-        Integer defaultSize = 20;
-        Mockito
-                .when(userRepository.existsById(Mockito.anyLong()))
-                .thenReturn(true);
-        //when
-        //then
-        ValidationException e = Assertions.assertThrows(ValidationException.class,
-                () -> bookingService.getAllByBookerIdAndState(bookerId, state, defaultFromElement, defaultSize));
-        assertThat(e.getMessage(), equalTo("Element index and page size mismatch!"));
     }
 
     @Test

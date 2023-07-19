@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.item.dto.CreateItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.item.dto.ExtendedItemResponseDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -25,30 +27,30 @@ public class ItemServiceImplIntegrationTest {
     @Test
     void testGetAllOwnerItems() {
         //given
-        UserDto userDto1 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto1 = userService.addNew(UserRequestDto.builder()
                 .name("User 1 name")
                 .email("user1@email.com")
                 .build());
-        UserDto userDto2 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto2 = userService.addNew(UserRequestDto.builder()
                 .name("User 2 name")
                 .email("user2@email.com")
                 .build());
-        ItemDtoWithBooking itemDto1 = itemService.addNew(
-                CreateItemDto.builder()
+        ItemResponseDto itemDto1 = itemService.addNew(
+                ItemRequestDto.builder()
                         .name("Item 1 name")
                         .description("Item 1 description")
                         .available(true)
                         .build(),
                 userDto1.getId());
-        ItemDtoWithBooking itemDto2 = itemService.addNew(
-                CreateItemDto.builder()
+        ItemResponseDto itemDto2 = itemService.addNew(
+                ItemRequestDto.builder()
                         .name("Item 2 name")
                         .description("Item 2 description")
                         .available(false)
                         .build(),
                 userDto1.getId());
-        ItemDtoWithBooking itemDto3 = itemService.addNew(
-                CreateItemDto.builder()
+        ItemResponseDto itemDto3 = itemService.addNew(
+                ItemRequestDto.builder()
                         .name("Item 3 name")
                         .description("Item 3 description")
                         .available(true)
@@ -58,7 +60,7 @@ public class ItemServiceImplIntegrationTest {
         Long userId = userDto1.getId();
         Integer defaultFromElement = 0;
         Integer defaultSize = 20;
-        List<ItemDtoWithBooking> actualItems = itemService.getAllOwnerItems(userId, defaultFromElement, defaultSize);
+        List<ExtendedItemResponseDto> actualItems = itemService.getAllOwnerItems(userId, defaultFromElement, defaultSize);
         //then
         assertThat(actualItems.size(), equalTo(2));
         assertThat(actualItems.get(0).getId(), equalTo(itemDto1.getId()));

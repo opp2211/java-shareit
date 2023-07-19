@@ -8,9 +8,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
@@ -48,39 +48,18 @@ public class UserServiceImplTest {
     @Test
     void testAddNew() {
         //given
-        user1.setId(null);
-        Long newUserId = 1L;
-        UserDto userDto = UserMapper.toUserDto(user1);
         Mockito
                 .when(userRepository.save(Mockito.any(User.class)))
-                .thenAnswer(invocationOnMock -> {
-                    User user = invocationOnMock.getArgument(0, User.class);
-                    user.setId(newUserId);
-                    return user;
-                });
+                .thenReturn(user1);
         //when
-        UserDto actualUserDto = userService.addNew(userDto);
+        UserResponseDto actualUserDto = userService.addNew(UserMapper.toUserRequestDto(user1));
         //then
-        assertThat(actualUserDto.getId(), equalTo(newUserId));
-        assertThat(actualUserDto.getName(), equalTo(userDto.getName()));
-        assertThat(actualUserDto.getEmail(), equalTo(userDto.getEmail()));
+        assertThat(actualUserDto.getId(), equalTo(user1.getId()));
+        assertThat(actualUserDto.getName(), equalTo(user1.getName()));
+        assertThat(actualUserDto.getEmail(), equalTo(user1.getEmail()));
         Mockito.verify(userRepository, Mockito.times(1))
                 .save(Mockito.any(User.class));
         Mockito.verifyNoMoreInteractions(userRepository);
-    }
-
-    @Test
-    void testAddNewBlankEmail() {
-        //given
-        UserDto userDto = UserDto.builder()
-                .name("User name")
-                .email("")
-                .build();
-        //when
-        //then
-        ValidationException e = Assertions.assertThrows(ValidationException.class,
-                () -> userService.addNew(userDto));
-        assertThat(e.getMessage(), equalTo("Email field cannot be null or blank!"));
     }
 
     @Test
@@ -91,7 +70,7 @@ public class UserServiceImplTest {
                 .when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user1));
         //when
-        UserDto actualUserDto = userService.getById(userId);
+        UserResponseDto actualUserDto = userService.getById(userId);
         //then
         assertThat(actualUserDto.getId(), equalTo(userId));
         assertThat(actualUserDto.getName(), equalTo(user1.getName()));
@@ -125,7 +104,7 @@ public class UserServiceImplTest {
                 .when(userRepository.findAll())
                 .thenReturn(users);
         //when
-        List<UserDto> actualUsers = userService.getAll();
+        List<UserResponseDto> actualUsers = userService.getAll();
         //then
         assertThat(actualUsers.size(), equalTo(users.size()));
         assertThat(actualUsers.get(0).getId(), equalTo(user1.getId()));
@@ -140,7 +119,7 @@ public class UserServiceImplTest {
         //given
         Long user1Id = user1.getId();
         String newUser1Name = "New user1 name";
-        UserDto userDto = UserDto.builder()
+        UserRequestDto userDto = UserRequestDto.builder()
                 .name(newUser1Name)
                 .email(null)
                 .build();
@@ -151,7 +130,7 @@ public class UserServiceImplTest {
                 .when(userRepository.save(user1))
                 .thenReturn(user1);
         //when
-        UserDto actualUserDto = userService.patchUpdate(user1Id, userDto);
+        UserResponseDto actualUserDto = userService.patchUpdate(user1Id, userDto);
         //then
         assertThat(actualUserDto.getId(), equalTo(user1Id));
         assertThat(actualUserDto.getName(), equalTo(newUser1Name));

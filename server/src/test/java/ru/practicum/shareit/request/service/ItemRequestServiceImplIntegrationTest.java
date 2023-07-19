@@ -5,11 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.item.dto.CreateItemDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
 import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -28,11 +29,11 @@ public class ItemRequestServiceImplIntegrationTest {
     @Test
     void testGetById() {
         //given
-        UserDto userDto1 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto1 = userService.addNew(UserRequestDto.builder()
                 .name("User 1 name")
                 .email("user1@email.com")
                 .build());
-        UserDto userDto2 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto2 = userService.addNew(UserRequestDto.builder()
                 .name("User 2 name")
                 .email("user2@email.com")
                 .build());
@@ -43,7 +44,7 @@ public class ItemRequestServiceImplIntegrationTest {
                         .build(),
                 userDto1.getId());
         itemService.addNew(
-                CreateItemDto.builder()
+                ItemRequestDto.builder()
                         .name("Item 1 name")
                         .description("Item 1 description")
                         .available(true)
@@ -51,7 +52,7 @@ public class ItemRequestServiceImplIntegrationTest {
                         .build(),
                 userDto2.getId());
         itemService.addNew(
-                CreateItemDto.builder()
+                ItemRequestDto.builder()
                         .name("Item 2 name")
                         .description("Item 2 description")
                         .available(true)

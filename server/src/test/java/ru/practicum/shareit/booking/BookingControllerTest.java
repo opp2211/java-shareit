@@ -112,22 +112,6 @@ class BookingControllerTest {
 
     @SneakyThrows
     @Test
-    void addNew_whenInvalid_thenBadRequest() {
-        Long userId = user2.getId();
-        BookingDto bookingDto = BookingMapper.toBookingDto(booking1);
-        bookingDto.setEnd(null);
-        mockMvc.perform(post("/bookings")
-                        .contentType("application/json")
-                        .header("X-Sharer-User-Id", userId)
-                        .content(objectMapper.writeValueAsString(bookingDto)))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(bookingService, Mockito.never())
-                .addNew(Mockito.any(), Mockito.anyLong());
-        Mockito.verifyNoMoreInteractions(bookingService);
-    }
-
-    @SneakyThrows
-    @Test
     void confirmBooking() {
         booking1.setStatus(BookingStatus.APPROVED);
         Long bookingId = booking1.getId();

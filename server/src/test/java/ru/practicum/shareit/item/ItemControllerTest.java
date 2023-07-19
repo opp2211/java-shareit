@@ -10,14 +10,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.AccessDeniedException;
-import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
+import ru.practicum.shareit.item.dto.ExtendedItemResponseDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.User;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -68,13 +71,12 @@ class ItemControllerTest {
     @Test
     void addNew_whenValid_thenOk() {
         Mockito.when(itemService.addNew(Mockito.any(), Mockito.any()))
-                .thenReturn(ItemMapper.toItemDtoWithBooking(
-                        item1, null, null, Collections.EMPTY_LIST));
+                .thenReturn(ItemMapper.toItemResponseDto(item1));
 
         mockMvc.perform(post("/items")
                         .contentType("application/json")
                         .header("X-Sharer-User-Id", 1)
-                        .content(objectMapper.writeValueAsString(ItemMapper.toCreateItemDto(item1))))
+                        .content(objectMapper.writeValueAsString(ItemMapper.toItemRequestDto(item1))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(item1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(item1.getName())))
@@ -87,24 +89,8 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
-    void addNew_whenIsNotValid_thenBadRequest() {
-        item1.setName("a".repeat(256));
-
-        mockMvc.perform(post("/items")
-                        .contentType("application/json")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(objectMapper.writeValueAsString(ItemMapper.toCreateItemDto(item1))))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(itemService, Mockito.never())
-                .addNew(Mockito.any(), Mockito.any());
-        Mockito.verifyNoMoreInteractions(itemService);
-    }
-
-    @SneakyThrows
-    @Test
     void patchUpdate_whenValid_thenOk() {
-        ItemDtoWithBooking itemDto = ItemMapper.toItemDtoWithBooking(
-                item1, null, null, Collections.EMPTY_LIST);
+        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
         Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(itemDto);
         mockMvc.perform(patch("/items/{itemId}", item1.getId())
@@ -123,25 +109,8 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
-    void patchUpdate_whenIsNotValid_thenBadRequest() {
-        item1.setName("");
-        ItemDtoWithBooking itemDto = ItemMapper.toItemDtoWithBooking(
-                item1, null, null, Collections.EMPTY_LIST);
-        mockMvc.perform(patch("/items/{itemId}", item1.getId())
-                        .contentType("application/json")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(objectMapper.writeValueAsString(itemDto)))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(itemService, Mockito.never())
-                .patchUpdate(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verifyNoMoreInteractions(itemService);
-    }
-
-    @SneakyThrows
-    @Test
     void patchUpdate_whenIdMismatch_thenForbidden() {
-        ItemDtoWithBooking itemDto = ItemMapper.toItemDtoWithBooking(
-                item1, null, null, Collections.EMPTY_LIST);
+        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
         Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new AccessDeniedException(""));
         mockMvc.perform(patch("/items/{itemId}", item1.getId())
@@ -153,10 +122,23 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
+    void patchUpdate_whenWrongUserId_thenNotFound() {
+        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
+        Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new NotFoundException(""));
+        mockMvc.perform(patch("/items/{itemId}", item1.getId())
+                        .contentType("application/json")
+                        .header("X-Sharer-User-Id", 0)
+                        .content(objectMapper.writeValueAsString(itemDto)))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
     void getById() {
         Long itemId = item1.getId();
         Long userId = item1.getOwner().getId();
-        ItemDtoWithBooking itemDto = ItemMapper.toItemDtoWithBooking(
+        ExtendedItemResponseDto itemDto = ItemMapper.toExtendedItemResponseDto(
                 item1, null, null, Collections.EMPTY_LIST);
         Mockito
                 .when(itemService.getById(itemId, userId))
@@ -182,7 +164,7 @@ class ItemControllerTest {
         Mockito
                 .when(itemService.getAllOwnerItems(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Stream.of(item1, item2)
-                        .map(ItemMapper::toItemDtoWithBooking)
+                        .map(ItemMapper::toExtendedItemResponseDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/items")
                         .contentType("application/json")
@@ -208,7 +190,7 @@ class ItemControllerTest {
         Mockito
                 .when(itemService.findAvailableByText(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Stream.of(item1, item2)
-                        .map(ItemMapper::toItemDtoWithBooking)
+                        .map(ItemMapper::toExtendedItemResponseDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/items/search")
                         .param("text", "")
@@ -240,7 +222,7 @@ class ItemControllerTest {
         LocalDateTime created = LocalDateTime.now();
         Mockito
                 .when(itemService.addNewComment(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(CommentDto.builder()
+                .thenReturn(CommentResponseDto.builder()
                         .id(0L)
                         .text(comment.getText())
                         .authorName(authorName)
@@ -263,19 +245,22 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
-    void addNewComment_whenIsNotValid_thenBadRequest() {
+    void addNewComment_whenNoBooking_thenBadRequest() {
         Long itemId = 0L;
         Long userId = 0L;
         Comment comment = Comment.builder()
-                .text(" ")
+                .text("Comment text")
                 .build();
+        Mockito
+                .when(itemService.addNewComment(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new ValidationException(""));
 
         mockMvc.perform(post("/items/{itemId}/comment", itemId)
                         .contentType("application/json")
                         .header("X-Sharer-User-Id", userId)
                         .content(objectMapper.writeValueAsString(comment)))
                 .andExpect(status().isBadRequest());
-        Mockito.verify(itemService, Mockito.never())
+        Mockito.verify(itemService, Mockito.only())
                 .addNewComment(Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.verifyNoMoreInteractions(itemService);
     }

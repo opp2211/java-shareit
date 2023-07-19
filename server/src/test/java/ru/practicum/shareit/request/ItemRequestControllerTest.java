@@ -89,24 +89,6 @@ class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
-    void addNew_whenValid_thenBadRequest() {
-        Long userId = user1.getId();
-        String desc = " ";
-        mockMvc.perform(post("/requests")
-                        .contentType("application/json")
-                        .header("X-Sharer-User-Id", userId)
-                        .content(objectMapper.writeValueAsString(
-                                ItemRequest.builder()
-                                        .description(desc)
-                                        .build())))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(requestService, Mockito.never())
-                .addNew(Mockito.any(), Mockito.anyLong());
-        Mockito.verifyNoMoreInteractions(requestService);
-    }
-
-    @SneakyThrows
-    @Test
     void getAllOwn() {
         Long userId = user1.getId();
         Mockito
@@ -161,20 +143,6 @@ class ItemRequestControllerTest {
         Mockito.verify(requestService, Mockito.only())
                 .getAllByPages(userId, defaultFrom, defaultSize);
         Mockito.verifyNoMoreInteractions(requestService);
-    }
-
-    @SneakyThrows
-    @Test
-    void getAllByPages_whenWrongParams_thenBadRequest() {
-        Long userId = user1.getId();
-        int defaultFrom = -1;
-        int defaultSize = 20;
-        mockMvc.perform(get("/requests/all")
-                        .contentType("application/json")
-                        .header("X-Sharer-User-Id", userId)
-                        .param("from", Integer.toString(defaultFrom))
-                        .param("size", Integer.toString(defaultSize)))
-                .andExpect(status().isBadRequest());
     }
 
     @SneakyThrows

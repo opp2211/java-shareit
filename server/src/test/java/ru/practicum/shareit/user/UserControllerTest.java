@@ -9,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -28,17 +30,17 @@ class UserControllerTest {
     @MockBean
     private UserService userService;
 
-    private UserDto userDto1;
-    private UserDto userDto2;
+    private User user1;
+    private User user2;
 
     @BeforeEach
     void setUp() {
-        userDto1 = UserDto.builder()
+        user1 = User.builder()
                 .id(1L)
                 .name("User 1 name")
                 .email("user1@email.com")
                 .build();
-        userDto2 = UserDto.builder()
+        user2 = User.builder()
                 .id(2L)
                 .name("User 2 name")
                 .email("user2@email.com")
@@ -48,37 +50,17 @@ class UserControllerTest {
     @SneakyThrows
     @Test
     void addNew_whenIsValid() {
-        userDto1.setId(null);
-        Long newId = 1L;
-        Mockito.when(userService.addNew(Mockito.any(UserDto.class)))
-                .thenAnswer(invocationOnMock -> {
-                    UserDto userDto = invocationOnMock.getArgument(0, UserDto.class);
-                    userDto.setId(newId);
-                    return userDto;
-                });
+        Mockito.when(userService.addNew(Mockito.any()))
+                .thenReturn(UserMapper.toUserResponseDto(user1));
         mockMvc.perform(post("/users")
-                        .content(objectMapper.writeValueAsString(userDto1))
+                        .content(objectMapper.writeValueAsString(UserMapper.toUserRequestDto(user1)))
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(newId), Long.class))
-                .andExpect(jsonPath("$.name", is(userDto1.getName())))
-                .andExpect(jsonPath("$.email", is(userDto1.getEmail())));
+                .andExpect(jsonPath("$.id", is(user1.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(user1.getName())))
+                .andExpect(jsonPath("$.email", is(user1.getEmail())));
         Mockito.verify(userService, Mockito.times(1))
-                .addNew(Mockito.any(UserDto.class));
-        Mockito.verifyNoMoreInteractions(userService);
-    }
-
-    @SneakyThrows
-    @Test
-    void addNew_whenIsNotValid_thenStatusBadRequest() {
-        userDto1.setId(null);
-        userDto1.setName("");
-        mockMvc.perform(post("/users")
-                        .content(objectMapper.writeValueAsString(userDto1))
-                        .contentType("application/json"))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(userService, Mockito.never())
-                .addNew(Mockito.any(UserDto.class));
+                .addNew(Mockito.any());
         Mockito.verifyNoMoreInteractions(userService);
     }
 
@@ -86,17 +68,19 @@ class UserControllerTest {
     @Test
     void getAll() {
         Mockito.when(userService.getAll())
-                .thenReturn(List.of(userDto1, userDto2));
+                .thenReturn(Stream.of(user1, user2)
+                        .map(UserMapper::toUserResponseDto)
+                        .collect(Collectors.toList()));
         mockMvc.perform(get("/users")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()", is(2)))
-                .andExpect(jsonPath("$[0].id", is(userDto1.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(userDto1.getName())))
-                .andExpect(jsonPath("$[0].email", is(userDto1.getEmail())))
-                .andExpect(jsonPath("$[1].id", is(userDto2.getId()), Long.class))
-                .andExpect(jsonPath("$[1].name", is(userDto2.getName())))
-                .andExpect(jsonPath("$[1].email", is(userDto2.getEmail())));
+                .andExpect(jsonPath("$[0].id", is(user1.getId()), Long.class))
+                .andExpect(jsonPath("$[0].name", is(user1.getName())))
+                .andExpect(jsonPath("$[0].email", is(user1.getEmail())))
+                .andExpect(jsonPath("$[1].id", is(user2.getId()), Long.class))
+                .andExpect(jsonPath("$[1].name", is(user2.getName())))
+                .andExpect(jsonPath("$[1].email", is(user2.getEmail())));
         Mockito.verify(userService, Mockito.times(1))
                 .getAll();
         Mockito.verifyNoMoreInteractions(userService);
@@ -105,15 +89,15 @@ class UserControllerTest {
     @SneakyThrows
     @Test
     void getById() {
-        Long userId = userDto1.getId();
+        Long userId = user1.getId();
         Mockito.when(userService.getById(userId))
-                .thenReturn(userDto1);
+                .thenReturn(UserMapper.toUserResponseDto(user1));
         mockMvc.perform(get("/users/{id}", userId)
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(userDto1.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(userDto1.getName())))
-                .andExpect(jsonPath("$.email", is(userDto1.getEmail())));
+                .andExpect(jsonPath("$.id", is(user1.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(user1.getName())))
+                .andExpect(jsonPath("$.email", is(user1.getEmail())));
         Mockito.verify(userService, Mockito.times(1))
                 .getById(userId);
         Mockito.verifyNoMoreInteractions(userService);
@@ -123,14 +107,14 @@ class UserControllerTest {
     @Test
     void patchUpdate_whenValid_thenOk() {
         Mockito.when(userService.patchUpdate(Mockito.any(), Mockito.any()))
-                .thenReturn(userDto1);
-        mockMvc.perform(patch("/users/{id}", userDto1.getId())
+                .thenReturn(UserMapper.toUserResponseDto(user1));
+        mockMvc.perform(patch("/users/{id}", user1.getId())
                         .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userDto1)))
+                        .content(objectMapper.writeValueAsString(UserMapper.toUserRequestDto(user1))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(userDto1.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(userDto1.getName())))
-                .andExpect(jsonPath("$.email", is(userDto1.getEmail())));
+                .andExpect(jsonPath("$.id", is(user1.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(user1.getName())))
+                .andExpect(jsonPath("$.email", is(user1.getEmail())));
         Mockito.verify(userService, Mockito.times(1))
                 .patchUpdate(Mockito.any(), Mockito.any());
         Mockito.verifyNoMoreInteractions(userService);
@@ -138,21 +122,8 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void patchUpdate_whenIsNotValid_thenBadRequest() {
-        userDto1.setEmail("email.ru@mail");
-        mockMvc.perform(patch("/users/{id}", userDto1.getId())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userDto1)))
-                .andExpect(status().isBadRequest());
-        Mockito.verify(userService, Mockito.never())
-                .patchUpdate(Mockito.any(), Mockito.any());
-        Mockito.verifyNoMoreInteractions(userService);
-    }
-
-    @SneakyThrows
-    @Test
     void remove() {
-        mockMvc.perform(delete("/users/{id}", userDto1.getId())
+        mockMvc.perform(delete("/users/{id}", user1.getId())
                         .contentType("application/json"))
                 .andExpect(status().isOk());
         Mockito.verify(userService, Mockito.times(1))

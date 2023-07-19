@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.EntityManager;
@@ -25,14 +26,14 @@ public class UserServiceImplIntegrationTest {
     @Test
     void testPatchUpdate() {
         //given
-        UserDto userDto1 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto1 = userService.addNew(UserRequestDto.builder()
                 .name("User 1 name")
                 .email("user1@email.com")
                 .build());
         //when
         String newName = "Updated";
         Long userId = userDto1.getId();
-        UserDto userDto = UserDto.builder()
+        UserRequestDto userDto = UserRequestDto.builder()
                 .name(newName)
                 .email(null)
                 .build();

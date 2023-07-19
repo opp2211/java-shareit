@@ -23,4 +23,14 @@ public class UserMapper {
                 .email(user.getEmail())
                 .build();
     }
+
+    public static UserRequestDto toUserRequestDto(User user) {
+        if (user == null) {
+            return null;
+        }
+        return UserRequestDto.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
+    }
 }

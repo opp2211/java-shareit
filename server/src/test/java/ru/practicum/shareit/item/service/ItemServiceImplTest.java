@@ -15,10 +15,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.CreateItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
-import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.CommentRepository;
@@ -111,7 +108,7 @@ public class ItemServiceImplTest {
     void testAddNew() {
         //given
         Long newItemId = 5L;
-        CreateItemDto createItemDto = ItemMapper.toCreateItemDto(item1);
+        ItemRequestDto createItemDto = ItemMapper.toItemRequestDto(item1);
         Long userId = item1.getOwner().getId();
         Mockito
                 .when(userRepository.findById(userId))
@@ -124,7 +121,7 @@ public class ItemServiceImplTest {
                     return item;
                 });
         //when
-        ItemDtoWithBooking actualItemDto = itemService.addNew(createItemDto, userId);
+        ItemResponseDto actualItemDto = itemService.addNew(createItemDto, userId);
         //then
         assertThat(actualItemDto.getId(), equalTo(newItemId));
         assertThat(actualItemDto.getName(), equalTo(item1.getName()));
@@ -140,7 +137,7 @@ public class ItemServiceImplTest {
     void testAddNewToItemRequest() {
         //given
         Long newItemId = 5L;
-        CreateItemDto createItemDto = ItemMapper.toCreateItemDto(item2);
+        ItemRequestDto createItemDto = ItemMapper.toItemRequestDto(item2);
         Long userId = item2.getOwner().getId();
         Mockito
                 .when(userRepository.findById(userId))
@@ -156,7 +153,7 @@ public class ItemServiceImplTest {
                     return item;
                 });
         //when
-        ItemDtoWithBooking actualItemDto = itemService.addNew(createItemDto, userId);
+        ItemResponseDto actualItemDto = itemService.addNew(createItemDto, userId);
         //then
         assertThat(actualItemDto.getId(), equalTo(newItemId));
         assertThat(actualItemDto.getName(), equalTo(item2.getName()));
@@ -177,7 +174,7 @@ public class ItemServiceImplTest {
         String expectedDesc = item1.getDescription();
         Long itemId = item1.getId();
         Long userId = item1.getOwner().getId();
-        ItemDtoWithBooking itemDto = ItemDtoWithBooking.builder()
+        ItemRequestDto itemDto = ItemRequestDto.builder()
                 .name(newUserName)
                 .description(null)
                 .available(false)
@@ -189,7 +186,7 @@ public class ItemServiceImplTest {
                 .when(itemRepository.save(item1))
                 .thenReturn(item1);
         //when
-        ItemDtoWithBooking actualItemDto = itemService.patchUpdate(itemDto, itemId, userId);
+        ItemResponseDto actualItemDto = itemService.patchUpdate(itemDto, itemId, userId);
         //then
         assertThat(actualItemDto.getId(), equalTo(itemId));
         assertThat(actualItemDto.getName(), equalTo(newUserName));
@@ -207,7 +204,7 @@ public class ItemServiceImplTest {
         String newUserName = "New user name";
         Long itemId = item1.getId();
         Long userId = user2.getId();
-        ItemDtoWithBooking itemDto = ItemDtoWithBooking.builder()
+        ItemRequestDto itemDto = ItemRequestDto.builder()
                 .name(newUserName)
                 .description(null)
                 .available(false)
@@ -228,7 +225,7 @@ public class ItemServiceImplTest {
         String newUserName = "New user name";
         Long itemId = 99L;
         Long userId = item1.getOwner().getId();
-        ItemDtoWithBooking itemDto = ItemDtoWithBooking.builder()
+        ItemRequestDto itemDto = ItemRequestDto.builder()
                 .name(newUserName)
                 .description(null)
                 .available(false)
@@ -253,7 +250,7 @@ public class ItemServiceImplTest {
         Mockito.when(commentRepository.findAllByItemId(itemId))
                 .thenReturn(Collections.emptyList());
         //when
-        ItemDtoWithBooking actualItemDto = itemService.getById(itemId, userId);
+        ExtendedItemResponseDto actualItemDto = itemService.getById(itemId, userId);
         //then
         assertThat(actualItemDto.getId(), equalTo(itemId));
         assertThat(actualItemDto.getName(), equalTo(item1.getName()));
@@ -280,7 +277,7 @@ public class ItemServiceImplTest {
         Mockito.when(commentRepository.findAllByItemId(itemId))
                 .thenReturn(Collections.singletonList(comment1));
         //when
-        ItemDtoWithBooking actualItemDto = itemService.getById(itemId, userId);
+        ExtendedItemResponseDto actualItemDto = itemService.getById(itemId, userId);
         //then
         assertThat(actualItemDto.getId(), equalTo(itemId));
         assertThat(actualItemDto.getName(), equalTo(item1.getName()));
@@ -315,7 +312,7 @@ public class ItemServiceImplTest {
         Mockito.when(itemRepository.searchAvailByText(Mockito.anyString(), Mockito.any(Pageable.class)))
                 .thenReturn(page);
         //when
-        List<ItemDtoWithBooking> actualItems = itemService.findAvailableByText(text, fromElement, size);
+        List<ExtendedItemResponseDto> actualItems = itemService.findAvailableByText(text, fromElement, size);
         //then
         assertThat(actualItems.size(), equalTo(2));
         assertThat(actualItems.get(0).getId(), equalTo(item1.getId()));
@@ -339,7 +336,7 @@ public class ItemServiceImplTest {
     void testAddNewComment_whenValid() {
         Long itemId = item1.getId();
         Long userId = user2.getId();
-        Comment requestComment = Comment.builder()
+        CommentRequestDto requestComment = CommentRequestDto.builder()
                 .text("text")
                 .build();
         Comment expectedComment = Comment.builder()
@@ -368,7 +365,7 @@ public class ItemServiceImplTest {
                     return comment;
                 });
 
-        CommentDto actualComment = itemService.addNewComment(requestComment, userId, itemId);
+        CommentResponseDto actualComment = itemService.addNewComment(requestComment, userId, itemId);
 
         assertThat(actualComment.getId(), equalTo(expectedComment.getId()));
         assertThat(actualComment.getText(), equalTo(expectedComment.getText()));

@@ -9,10 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.item.dto.CreateItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoWithBooking;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.persistence.EntityManager;
@@ -41,16 +42,16 @@ public class BookingServiceImplIntegrationTest {
     @Test
     void testAddNew() {
         //given
-        UserDto userDto1 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto1 = userService.addNew(UserRequestDto.builder()
                 .name("User 1 name")
                 .email("user1@email.com")
                 .build());
-        UserDto userDto2 = userService.addNew(UserDto.builder()
+        UserResponseDto userDto2 = userService.addNew(UserRequestDto.builder()
                 .name("User 2 name")
                 .email("user2@email.com")
                 .build());
-        ItemDtoWithBooking itemDto = itemService.addNew(
-                CreateItemDto.builder()
+        ItemResponseDto itemDto = itemService.addNew(
+                ItemRequestDto.builder()
                         .name("Item 1 name")
                         .description("Item 1 description")
                         .available(true)
