@@ -2,14 +2,12 @@ package ru.practicum.shareit.exception.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 
-import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 @RestControllerAdvice
@@ -23,11 +21,9 @@ public class CommonHandler {
         return new ExceptionResponse(e.getMessage());
     }
 
-    @ExceptionHandler({ValidationException.class,
-            MethodArgumentNotValidException.class,
-            ConstraintViolationException.class})
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionResponse handleValidation(Exception e) {
+    public ExceptionResponse handleValidation(ValidationException e) {
         log.debug(e.getMessage(), e);
         return new ExceptionResponse(e.getMessage());
     }
