@@ -12,6 +12,7 @@ import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
 
 import javax.validation.ValidationException;
+import java.util.Collections;
 import java.util.Map;
 
 @Service
@@ -57,6 +58,9 @@ public class ItemClient extends BaseClient {
     public ResponseEntity<Object> findAvailableByText(String text, Integer fromElement, Integer size) {
         if (fromElement % size != 0) {
             throw new ValidationException("Element index and page size mismatch!");
+        }
+        if (text.isBlank()) {
+            return ResponseEntity.status(200).body(Collections.EMPTY_LIST);
         }
 
         String path = "/search?from={from}&size={size}&text={text}";

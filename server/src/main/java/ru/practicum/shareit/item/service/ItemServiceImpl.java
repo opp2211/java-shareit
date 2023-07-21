@@ -117,9 +117,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional(readOnly = true)
     public List<ExtendedItemResponseDto> findAvailableByText(String text, Integer fromElement, Integer size) {
         int fromPage = fromElement / size;
-        if (text.isBlank()) {
-            return new ArrayList<>();
-        }
         List<Booking> unfilteredBookings = bookingRepository
                 .findAllByStatus(BookingStatus.APPROVED);
         List<Comment> unfilteredComments = commentRepository.findAll();
