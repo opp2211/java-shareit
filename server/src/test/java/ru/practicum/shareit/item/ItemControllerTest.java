@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ItemController.class)
 class ItemControllerTest {
+    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
     User user1;
     Item item1;
     Item item2;
@@ -39,7 +40,6 @@ class ItemControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private ItemService itemService;
-    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
 
     @BeforeEach
     void setUp() {

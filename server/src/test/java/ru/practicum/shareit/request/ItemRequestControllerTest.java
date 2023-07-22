@@ -28,14 +28,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ItemRequestController.class)
 class ItemRequestControllerTest {
+    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private MockMvc mockMvc;
     @MockBean
     private ItemRequestService requestService;
-    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
-
     private User user1;
     private ItemRequest itemRequest1;
     private ItemRequest itemRequest2;

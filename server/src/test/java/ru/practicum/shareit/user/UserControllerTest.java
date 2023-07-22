@@ -24,11 +24,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = UserController.class)
 class UserControllerTest {
+    private final UserMapper userMapper = new UserMapperImpl();
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private MockMvc mockMvc;
-    private final UserMapper userMapper = new UserMapperImpl();
     @MockBean
     private UserService userService;
 

@@ -31,6 +31,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemRequestServiceImplTest {
+    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
+    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
     private ItemRequestServiceImpl itemRequestService;
     @Mock
     private ItemRequestRepository itemRequestRepo;
@@ -38,9 +40,6 @@ public class ItemRequestServiceImplTest {
     private ItemRepository itemRepo;
     @Mock
     private UserRepository userRepo;
-    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
-    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
-
     private User user1;
     private User user2;
     private User user3;
