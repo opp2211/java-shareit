@@ -143,4 +143,11 @@ public class UserServiceImplTest {
                 .save(user1);
         Mockito.verifyNoMoreInteractions(userRepository);
     }
+    @Test
+    void testRemove() {
+        userService.remove(1L);
+        Mockito.verify(userRepository, Mockito.times(1))
+                .deleteById(Mockito.any());
+        Mockito.verifyNoMoreInteractions(userRepository);
+    }
 }

@@ -207,6 +207,71 @@ public class BookingServiceImplTest {
     }
 
     @Test
+    void testRejectBooking() {
+        //given
+        Long bookingId = booking1.getId();
+        boolean approved = false;
+        Long itemOwnerId = booking1.getItem().getOwner().getId();
+        Mockito
+                .when(bookingRepository.findById(bookingId))
+                .thenReturn(Optional.of(booking1));
+        Mockito
+                .when(bookingRepository.save(Mockito.any(Booking.class)))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0, Booking.class));
+        //when
+        Booking actualBooking = bookingService.confirmBooking(bookingId, approved, itemOwnerId);
+        //then
+        assertThat(actualBooking.getId(), equalTo(bookingId));
+        assertThat(actualBooking.getStatus(), equalTo(BookingStatus.REJECTED));
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findById(bookingId);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .save(booking1);
+        Mockito.verifyNoMoreInteractions(bookingRepository);
+    }
+
+    @Test
+    void testConfirmBooking_whenWrongBookerId_thenThrowNFE() {
+        //given
+        Long bookingId = booking1.getId();
+        boolean approved = true;
+        Long itemOwnerId = 99L;
+        Mockito
+                .when(bookingRepository.findById(bookingId))
+                .thenReturn(Optional.of(booking1));
+        //when
+        //then
+        Assertions.assertThrows(NotFoundException.class, () ->
+                bookingService.confirmBooking(bookingId, approved, itemOwnerId));
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findById(bookingId);
+        Mockito.verify(bookingRepository, Mockito.never())
+                .save(Mockito.any());
+        Mockito.verifyNoMoreInteractions(bookingRepository);
+    }
+
+    @Test
+    void testConfirmBooking_whenAlreadyConfirmed() {
+        //given
+        booking1.setStatus(BookingStatus.APPROVED);
+        Long bookingId = booking1.getId();
+        boolean approved = true;
+        Long itemOwnerId = booking1.getItem().getOwner().getId();
+        Mockito
+                .when(bookingRepository.findById(bookingId))
+                .thenReturn(Optional.of(booking1));
+        //when
+        //then
+        Assertions.assertThrows(ValidationException.class, () ->
+                bookingService.confirmBooking(bookingId, approved, itemOwnerId));
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findById(bookingId);
+        Mockito.verify(bookingRepository, Mockito.never())
+                .save(Mockito.any());
+        Mockito.verifyNoMoreInteractions(bookingRepository);
+    }
+
+    @Test
     void testGetBooking() {
         //given
         Long bookingId = booking1.getId();
@@ -218,6 +283,22 @@ public class BookingServiceImplTest {
         Booking actualBooking = bookingService.getBooking(bookingId, requesterId);
         //then
         assertThat(actualBooking.getId(), equalTo(bookingId));
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findById(bookingId);
+        Mockito.verifyNoMoreInteractions(bookingRepository);
+    }
+
+    @Test
+    void testGetBooking_whenWrongUserId() {
+        //given
+        Long bookingId = booking1.getId();
+        Long requesterId = 99L;
+        Mockito
+                .when(bookingRepository.findById(bookingId))
+                .thenReturn(Optional.of(booking1));
+        //when
+        //then
+        Assertions.assertThrows(NotFoundException.class, () -> bookingService.getBooking(bookingId, requesterId));
         Mockito.verify(bookingRepository, Mockito.times(1))
                 .findById(bookingId);
         Mockito.verifyNoMoreInteractions(bookingRepository);
