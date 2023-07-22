@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.request.dto.ItemRequestMapper;
+import ru.practicum.shareit.request.dto.ItemRequestMapperImpl;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
@@ -33,6 +34,7 @@ class ItemRequestControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private ItemRequestService requestService;
+    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
 
     private User user1;
     private ItemRequest itemRequest1;
@@ -94,7 +96,7 @@ class ItemRequestControllerTest {
         Mockito
                 .when(requestService.getAllOwn(userId))
                 .thenReturn(Stream.of(itemRequest1, itemRequest2)
-                        .map(ItemRequestMapper::toItemRequestWithItemsDto)
+                        .map(itemRequestMapper::toItemRequestWithItemsDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/requests")
                         .contentType("application/json")
@@ -123,7 +125,7 @@ class ItemRequestControllerTest {
         Mockito
                 .when(requestService.getAllByPages(userId, defaultFrom, defaultSize))
                 .thenReturn(Stream.of(itemRequest1, itemRequest2)
-                        .map(ItemRequestMapper::toItemRequestWithItemsDto)
+                        .map(itemRequestMapper::toItemRequestWithItemsDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/requests/all")
                         .contentType("application/json")
@@ -152,7 +154,7 @@ class ItemRequestControllerTest {
         Long userId = user1.getId();
         Mockito
                 .when(requestService.getById(requestId, userId))
-                .thenReturn(ItemRequestMapper.toItemRequestWithItemsDto(itemRequest1));
+                .thenReturn(itemRequestMapper.toItemRequestWithItemsDto(itemRequest1));
         mockMvc.perform(get("/requests/{requestId}", requestId)
                         .contentType("application/json")
                         .header("X-Sharer-User-Id", userId))

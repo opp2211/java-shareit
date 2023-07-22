@@ -10,8 +10,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentMapperImpl;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemMapperImpl;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
+import ru.practicum.shareit.request.dto.ItemRequestMapper;
+import ru.practicum.shareit.request.dto.ItemRequestMapperImpl;
 import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.storage.ItemRequestRepository;
@@ -33,6 +38,8 @@ public class ItemRequestServiceImplTest {
     private ItemRepository itemRepo;
     @Mock
     private UserRepository userRepo;
+    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
+    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
 
     private User user1;
     private User user2;
@@ -44,7 +51,7 @@ public class ItemRequestServiceImplTest {
 
     @BeforeEach
     void beforeEach() {
-        itemRequestService = new ItemRequestServiceImpl(itemRequestRepo, userRepo, itemRepo);
+        itemRequestService = new ItemRequestServiceImpl(itemRequestRepo, userRepo, itemRepo, itemRequestMapper, itemMapper);
         user1 = User.builder()
                 .id(1L)
                 .name("User1 name")

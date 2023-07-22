@@ -46,6 +46,8 @@ public class ItemServiceImplTest {
     private CommentRepository commentRepository;
     @Mock
     private ItemRequestRepository itemRequestRepository;
+    private final CommentMapper commentMapper = new CommentMapperImpl();
+    private final ItemMapper itemMapper = new ItemMapperImpl(commentMapper);
 
     private User user2;
     private ItemRequest itemRequest1;
@@ -57,7 +59,8 @@ public class ItemServiceImplTest {
     @BeforeEach
     void beforeEach() {
         itemService = new ItemServiceImpl(
-                itemRepository, userRepository, bookingRepository, commentRepository, itemRequestRepository);
+                itemRepository, userRepository, bookingRepository, commentRepository, itemRequestRepository,
+                itemMapper, commentMapper);
         User user1 = User.builder()
                 .id(1L)
                 .name("User1 name")
@@ -108,7 +111,7 @@ public class ItemServiceImplTest {
     void testAddNew() {
         //given
         Long newItemId = 5L;
-        ItemRequestDto createItemDto = ItemMapper.toItemRequestDto(item1);
+        ItemRequestDto createItemDto = itemMapper.toItemRequestDto(item1);
         Long userId = item1.getOwner().getId();
         Mockito
                 .when(userRepository.findById(userId))
@@ -137,7 +140,7 @@ public class ItemServiceImplTest {
     void testAddNewToItemRequest() {
         //given
         Long newItemId = 5L;
-        ItemRequestDto createItemDto = ItemMapper.toItemRequestDto(item2);
+        ItemRequestDto createItemDto = itemMapper.toItemRequestDto(item2);
         Long userId = item2.getOwner().getId();
         Mockito
                 .when(userRepository.findById(userId))

@@ -11,10 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ExtendedItemResponseDto;
-import ru.practicum.shareit.item.dto.ItemMapper;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
@@ -22,7 +19,6 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +39,7 @@ class ItemControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private ItemService itemService;
+    private final ItemMapper itemMapper = new ItemMapperImpl(new CommentMapperImpl());
 
     @BeforeEach
     void setUp() {
@@ -71,12 +68,12 @@ class ItemControllerTest {
     @Test
     void addNew_whenValid_thenOk() {
         Mockito.when(itemService.addNew(Mockito.any(), Mockito.any()))
-                .thenReturn(ItemMapper.toItemResponseDto(item1));
+                .thenReturn(itemMapper.toItemResponseDto(item1));
 
         mockMvc.perform(post("/items")
                         .contentType("application/json")
                         .header("X-Sharer-User-Id", 1)
-                        .content(objectMapper.writeValueAsString(ItemMapper.toItemRequestDto(item1))))
+                        .content(objectMapper.writeValueAsString(itemMapper.toItemRequestDto(item1))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(item1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(item1.getName())))
@@ -90,7 +87,7 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void patchUpdate_whenValid_thenOk() {
-        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
+        ItemResponseDto itemDto = itemMapper.toItemResponseDto(item1);
         Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(itemDto);
         mockMvc.perform(patch("/items/{itemId}", item1.getId())
@@ -110,7 +107,7 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void patchUpdate_whenIdMismatch_thenForbidden() {
-        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
+        ItemResponseDto itemDto = itemMapper.toItemResponseDto(item1);
         Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new AccessDeniedException(""));
         mockMvc.perform(patch("/items/{itemId}", item1.getId())
@@ -123,7 +120,7 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void patchUpdate_whenWrongUserId_thenNotFound() {
-        ItemResponseDto itemDto = ItemMapper.toItemResponseDto(item1);
+        ItemResponseDto itemDto = itemMapper.toItemResponseDto(item1);
         Mockito.when(itemService.patchUpdate(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new NotFoundException(""));
         mockMvc.perform(patch("/items/{itemId}", item1.getId())
@@ -138,8 +135,7 @@ class ItemControllerTest {
     void getById() {
         Long itemId = item1.getId();
         Long userId = item1.getOwner().getId();
-        ExtendedItemResponseDto itemDto = ItemMapper.toExtendedItemResponseDto(
-                item1, null, null, Collections.EMPTY_LIST);
+        ExtendedItemResponseDto itemDto = itemMapper.toExtendedItemResponseDto(item1);
         Mockito
                 .when(itemService.getById(itemId, userId))
                 .thenReturn(itemDto);
@@ -164,7 +160,7 @@ class ItemControllerTest {
         Mockito
                 .when(itemService.getAllOwnerItems(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Stream.of(item1, item2)
-                        .map(ItemMapper::toExtendedItemResponseDto)
+                        .map(itemMapper::toExtendedItemResponseDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/items")
                         .contentType("application/json")
@@ -190,7 +186,7 @@ class ItemControllerTest {
         Mockito
                 .when(itemService.findAvailableByText(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Stream.of(item1, item2)
-                        .map(ItemMapper::toExtendedItemResponseDto)
+                        .map(itemMapper::toExtendedItemResponseDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/items/search")
                         .param("text", "")

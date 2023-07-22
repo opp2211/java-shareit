@@ -1,70 +1,32 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import ru.practicum.shareit.booking.dto.BookingNearestDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ItemMapper {
-    public static Item toItem(ItemRequestDto itemRequestDto) {
-        return Item.builder()
-                .name(itemRequestDto.getName())
-                .description(itemRequestDto.getDescription())
-                .available(itemRequestDto.getAvailable())
-                .build();
-    }
+@Mapper(componentModel = "spring", uses = {CommentMapper.class}, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        imports = {Collections.class})
+public abstract class ItemMapper {
+    public abstract Item toItem(ItemRequestDto itemRequestDto);
 
-    public static ItemRequestDto toItemRequestDto(Item item) {
-        return ItemRequestDto.builder()
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.isAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .build();
-    }
+    @Mapping(target = "requestId", source = "request.id")
+    public abstract ItemRequestDto toItemRequestDto(Item item);
 
-    public static ItemResponseDto toItemResponseDto(Item item) {
-        return ItemResponseDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.isAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .build();
-    }
+    @Mapping(target = "requestId", source = "request.id")
+    public abstract ItemResponseDto toItemResponseDto(Item item);
 
-    public static ExtendedItemResponseDto toExtendedItemResponseDto(Item item, BookingNearestDto lastBooking, BookingNearestDto nextBooking,
-                                                                    List<Comment> comments) {
-        return ExtendedItemResponseDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.isAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .lastBooking(lastBooking)
-                .nextBooking(nextBooking)
-                .comments(comments.stream()
-                        .map(CommentMapper::toCommentResponseDto)
-                        .collect(Collectors.toList()))
-                .build();
-    }
+    @Mapping(target = "id", source = "item.id")
+    @Mapping(target = "requestId", source = "item.request.id")
+    public abstract ExtendedItemResponseDto toExtendedItemResponseDto(
+            Item item, BookingNearestDto lastBooking, BookingNearestDto nextBooking, List<Comment> comments);
 
-    public static ExtendedItemResponseDto toExtendedItemResponseDto(Item item) {
-        return ExtendedItemResponseDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.isAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .lastBooking(null)
-                .nextBooking(null)
-                .comments(Collections.EMPTY_LIST)
-                .build();
-    }
+    @Mapping(target = "requestId", source = "request.id")
+    @Mapping(target = "comments", expression = "java(Collections.EMPTY_LIST)")
+    public abstract ExtendedItemResponseDto toExtendedItemResponseDto(Item item);
 }

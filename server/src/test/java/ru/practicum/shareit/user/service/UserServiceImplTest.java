@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.dto.UserMapperImpl;
 import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.model.User;
@@ -23,16 +24,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
-    private UserServiceImpl userService;
+    private final UserMapper userMapper = new UserMapperImpl();
     @Mock
     private UserRepository userRepository;
+    private UserServiceImpl userService;
 
     private User user1;
     private User user2;
 
     @BeforeEach
     void beforeEach() {
-        userService = new UserServiceImpl(userRepository);
+        userService = new UserServiceImpl(userRepository, userMapper);
         user1 = User.builder()
                 .id(1L)
                 .name("User1 name")
@@ -52,7 +54,7 @@ public class UserServiceImplTest {
                 .when(userRepository.save(Mockito.any(User.class)))
                 .thenReturn(user1);
         //when
-        UserResponseDto actualUserDto = userService.addNew(UserMapper.toUserRequestDto(user1));
+        UserResponseDto actualUserDto = userService.addNew(userMapper.toUserRequestDto(user1));
         //then
         assertThat(actualUserDto.getId(), equalTo(user1.getId()));
         assertThat(actualUserDto.getName(), equalTo(user1.getName()));

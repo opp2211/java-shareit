@@ -1,26 +1,19 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import ru.practicum.shareit.item.model.Comment;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class CommentMapper {
-    public static CommentResponseDto toCommentResponseDto(Comment comment) {
-        return CommentResponseDto.builder()
-                .id(comment.getId())
-                .text(comment.getText())
-                .authorName(comment.getAuthor().getName())
-                .created(comment.getCreated())
-                .build();
-    }
+@Mapper(componentModel = "spring", imports = {LocalDateTime.class})
+public abstract class CommentMapper {
+    @Mapping(target = "authorName", source = "author.name")
+    public abstract CommentResponseDto toCommentResponseDto(Comment comment);
 
-    public static Comment toComment(CommentRequestDto comment) {
-        return Comment.builder()
-                .text(comment.getText())
-                .created(LocalDateTime.now())
-                .build();
-    }
+//    @Mapping(target = "authorName", source = "author.name")
+//    public abstract List<CommentResponseDto> toCommentResponseDtos(List<Comment> comments);
+
+    @Mapping(target = "created", expression = "java(LocalDateTime.now())")
+    public abstract Comment toComment(CommentRequestDto comment);
 }

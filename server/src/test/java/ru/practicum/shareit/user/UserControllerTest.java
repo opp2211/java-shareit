@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.dto.UserMapperImpl;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
@@ -27,6 +28,7 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
     @Autowired
     private MockMvc mockMvc;
+    private final UserMapper userMapper = new UserMapperImpl();
     @MockBean
     private UserService userService;
 
@@ -51,9 +53,9 @@ class UserControllerTest {
     @Test
     void addNew_whenIsValid() {
         Mockito.when(userService.addNew(Mockito.any()))
-                .thenReturn(UserMapper.toUserResponseDto(user1));
+                .thenReturn(userMapper.toUserResponseDto(user1));
         mockMvc.perform(post("/users")
-                        .content(objectMapper.writeValueAsString(UserMapper.toUserRequestDto(user1)))
+                        .content(objectMapper.writeValueAsString(userMapper.toUserRequestDto(user1)))
                         .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(user1.getId()), Long.class))
@@ -69,7 +71,7 @@ class UserControllerTest {
     void getAll() {
         Mockito.when(userService.getAll())
                 .thenReturn(Stream.of(user1, user2)
-                        .map(UserMapper::toUserResponseDto)
+                        .map(userMapper::toUserResponseDto)
                         .collect(Collectors.toList()));
         mockMvc.perform(get("/users")
                         .contentType("application/json"))
@@ -91,7 +93,7 @@ class UserControllerTest {
     void getById() {
         Long userId = user1.getId();
         Mockito.when(userService.getById(userId))
-                .thenReturn(UserMapper.toUserResponseDto(user1));
+                .thenReturn(userMapper.toUserResponseDto(user1));
         mockMvc.perform(get("/users/{id}", userId)
                         .contentType("application/json"))
                 .andExpect(status().isOk())
@@ -107,10 +109,10 @@ class UserControllerTest {
     @Test
     void patchUpdate_whenValid_thenOk() {
         Mockito.when(userService.patchUpdate(Mockito.any(), Mockito.any()))
-                .thenReturn(UserMapper.toUserResponseDto(user1));
+                .thenReturn(userMapper.toUserResponseDto(user1));
         mockMvc.perform(patch("/users/{id}", user1.getId())
                         .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(UserMapper.toUserRequestDto(user1))))
+                        .content(objectMapper.writeValueAsString(userMapper.toUserRequestDto(user1))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(user1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(user1.getName())))

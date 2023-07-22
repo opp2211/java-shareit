@@ -18,17 +18,18 @@ import java.util.stream.Collectors;
 @Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     public UserResponseDto addNew(UserRequestDto userRequestDto) {
-        User user = userRepository.save(UserMapper.toUser(userRequestDto));
-        return UserMapper.toUserResponseDto(user);
+        User user = userRepository.save(userMapper.toUser(userRequestDto));
+        return userMapper.toUserResponseDto(user);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDto getById(Long id) {
-        return UserMapper.toUserResponseDto(userRepository.findById(id)
+        return userMapper.toUserResponseDto(userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", id))));
     }
 
@@ -36,7 +37,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public List<UserResponseDto> getAll() {
         return userRepository.findAll().stream()
-                .map(UserMapper::toUserResponseDto)
+                .map(userMapper::toUserResponseDto)
                 .collect(Collectors.toList());
     }
 
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
         if (userRequestDto.getEmail() != null) {
             user.setEmail(userRequestDto.getEmail());
         }
-        return UserMapper.toUserResponseDto(userRepository.save(user));
+        return userMapper.toUserResponseDto(userRepository.save(user));
     }
 
     @Override

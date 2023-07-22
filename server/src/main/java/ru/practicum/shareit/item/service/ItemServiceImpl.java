@@ -33,10 +33,13 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final ItemRequestRepository itemRequestRepo;
+    private final ItemMapper itemMapper;
+    private final CommentMapper commentMapper;
+
 
     @Override
     public ItemResponseDto addNew(ItemRequestDto itemRequestDto, Long userId) {
-        Item item = ItemMapper.toItem(itemRequestDto);
+        Item item = itemMapper.toItem(itemRequestDto);
         item.setOwner(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
         Long itemRequestId = itemRequestDto.getRequestId();
@@ -44,7 +47,7 @@ public class ItemServiceImpl implements ItemService {
             item.setRequest(itemRequestRepo.findById(itemRequestId)
                     .orElseThrow(() -> new NotFoundException(String.format("ItemRequest ID = %d not found!", itemRequestId))));
         }
-        return ItemMapper.toItemResponseDto(itemRepository.save(item));
+        return itemMapper.toItemResponseDto(itemRepository.save(item));
     }
 
     @Override
@@ -63,7 +66,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemRequestDto.getAvailable() != null) {
             item.setAvailable(itemRequestDto.getAvailable());
         }
-        return ItemMapper.toItemResponseDto(itemRepository.save(item));
+        return itemMapper.toItemResponseDto(itemRepository.save(item));
     }
 
     @Override
@@ -82,7 +85,7 @@ public class ItemServiceImpl implements ItemService {
                             itemId, BookingStatus.APPROVED, LocalDateTime.now()));
         }
         List<Comment> comments = commentRepository.findAllByItemId(itemId);
-        return ItemMapper.toExtendedItemResponseDto(item, lastBooking, nextBooking, comments);
+        return itemMapper.toExtendedItemResponseDto(item, lastBooking, nextBooking, comments);
     }
 
     @Override
@@ -94,7 +97,7 @@ public class ItemServiceImpl implements ItemService {
         List<Comment> unfilteredComments = commentRepository.findAll();
 
         return itemRepository.findAllByOwnerId(userId, PageRequest.of(fromPage, size)).stream()
-                .map(item -> ItemMapper.toExtendedItemResponseDto(item,
+                .map(item -> itemMapper.toExtendedItemResponseDto(item,
                         unfilteredBookings.stream()
                                 .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
                                         booking.getStart().isBefore(LocalDateTime.now()))
@@ -121,7 +124,7 @@ public class ItemServiceImpl implements ItemService {
                 .findAllByStatus(BookingStatus.APPROVED);
         List<Comment> unfilteredComments = commentRepository.findAll();
         return itemRepository.searchAvailByText(text, PageRequest.of(fromPage, size)).stream()
-                .map(item -> ItemMapper.toExtendedItemResponseDto(item,
+                .map(item -> itemMapper.toExtendedItemResponseDto(item,
                         unfilteredBookings.stream()
                                 .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
                                         booking.getStart().isBefore(LocalDateTime.now()))
@@ -146,11 +149,11 @@ public class ItemServiceImpl implements ItemService {
                 itemId, userId, BookingStatus.APPROVED, LocalDateTime.now())) {
             throw new ValidationException("");
         }
-        Comment comment = CommentMapper.toComment(commentRequestDto);
+        Comment comment = commentMapper.toComment(commentRequestDto);
         comment.setItem(itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item ID = %d not found!", itemId))));
         comment.setAuthor(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User ID = %d not found!", userId))));
-        return CommentMapper.toCommentResponseDto(commentRepository.save(comment));
+        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
     }
 }

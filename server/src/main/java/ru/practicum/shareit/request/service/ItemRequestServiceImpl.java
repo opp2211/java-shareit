@@ -26,6 +26,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository itemRequestRepo;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
+    private final ItemRequestMapper itemRequestMapper;
+    private final ItemMapper itemMapper;
 
     @Override
     public ItemRequest addNew(ItemRequest itemRequest, Long userId) {
@@ -42,10 +44,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new NotFoundException(String.format("User ID = %d not found!", ownerId));
         }
         List<ItemResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
-                .map(ItemMapper::toItemResponseDto)
+                .map(itemMapper::toItemResponseDto)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterId(ownerId).stream()
-                .map(ItemRequestMapper::toItemRequestWithItemsDto)
+                .map(itemRequestMapper::toItemRequestWithItemsDto)
                 .peek(itemRequestWithItemsDto -> itemRequestWithItemsDto.setItems(
                         unfilteredItems.stream()
                                 .filter(itemWithIdResponseDto ->
@@ -59,12 +61,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestWithItemsDto> getAllByPages(Long userId, Integer fromElement, Integer size) {
         int fromPage = fromElement / size;
         List<ItemResponseDto> unfilteredItems = itemRepo.findAllByRequestIdNotNull().stream()
-                .map(ItemMapper::toItemResponseDto)
+                .map(itemMapper::toItemResponseDto)
                 .collect(Collectors.toList());
         return itemRequestRepo.findAllByRequesterIdNot(
                         userId, PageRequest.of(fromPage, size, Sort.by(Sort.Direction.DESC, "created")))
                 .stream()
-                .map(ItemRequestMapper::toItemRequestWithItemsDto)
+                .map(itemRequestMapper::toItemRequestWithItemsDto)
                 .peek(itemRequestWithItemsDto -> itemRequestWithItemsDto.setItems(
                         unfilteredItems.stream()
                                 .filter(itemWithIdResponseDto ->
@@ -79,12 +81,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (!userRepo.existsById(userId)) {
             throw new NotFoundException(String.format("User ID = %d not found!", userId));
         }
-        ItemRequestWithItemsDto itemRequestWithItemsDto = ItemRequestMapper.toItemRequestWithItemsDto(
+        ItemRequestWithItemsDto itemRequestWithItemsDto = itemRequestMapper.toItemRequestWithItemsDto(
                 itemRequestRepo.findById(requestId)
                         .orElseThrow(
                                 () -> new NotFoundException(String.format("Request ID = %d not found!", requestId))));
         itemRequestWithItemsDto.setItems(itemRepo.findAllByRequestId(requestId).stream()
-                .map(ItemMapper::toItemResponseDto)
+                .map(itemMapper::toItemResponseDto)
                 .collect(Collectors.toList()));
         return itemRequestWithItemsDto;
     }
